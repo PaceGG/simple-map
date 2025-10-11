@@ -3,18 +3,7 @@ import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
 import { useDispatch } from "react-redux";
 import { openMenu } from "../store/menuSlice";
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-export interface Popup {
-  id: string;
-  position: Point; // координаты на изображении, в пикселях
-  iconUrl: string;
-  title: string;
-}
+import type { Point, Popup } from "../data";
 
 export interface Polygon {
   id: string;
@@ -40,7 +29,7 @@ interface DragState {
 }
 
 export default function ZoomPanMap({
-  backgroundUrl = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&auto=format&fit=crop",
+  backgroundUrl = "map.png",
   minScale = 0.5,
   maxScale = 4,
   initialScale = 1,
@@ -162,9 +151,9 @@ export default function ZoomPanMap({
 
   const selectPopup = (popup: Popup) => {
     const newMenuData: MenuData = {
-      title: popup.title,
-      type: "Тип",
-      imgSrc: "suburban.webp",
+      title: popup.organization.name,
+      type: popup.type.type,
+      imgSrc: popup.image,
       logoSrc: "logo.webp",
     };
 
@@ -196,6 +185,8 @@ export default function ZoomPanMap({
           overflow: "hidden",
           userSelect: "none",
           touchAction: "none",
+          bgcolor: "#627594",
+          borderRadius: 0,
           ...sx,
         }}
       >
@@ -216,7 +207,8 @@ export default function ZoomPanMap({
                 width: 1600,
                 height: 1200,
                 backgroundImage: `url(${backgroundUrl})`,
-                backgroundSize: "cover",
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
               }}
             />
@@ -286,9 +278,9 @@ export default function ZoomPanMap({
                 }}
               >
                 <img
-                  src={popup.iconUrl}
-                  alt={popup.title}
-                  style={{ width: 32, height: 32, pointerEvents: "none" }} // чтобы клик шёл на Box, а не на img
+                  src={popup.type.icon}
+                  alt={popup.organization.name}
+                  style={{ width: 32, height: 32, pointerEvents: "none" }}
                 />
               </Box>
             );
@@ -302,7 +294,6 @@ export default function ZoomPanMap({
             bgcolor: "rgba(255,255,255,0.8)",
             px: 1.5,
             py: 0.5,
-            borderRadius: 1,
             boxShadow: 1,
             fontSize: 12,
             userSelect: "none",
