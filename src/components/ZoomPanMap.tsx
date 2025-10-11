@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
+import { useDispatch } from "react-redux";
+import { openMenu } from "../store/menuSlice";
 
 interface Point {
   x: number;
@@ -167,7 +169,10 @@ export default function ZoomPanMap({
     };
 
     setMenuData(newMenuData);
+    dispatch(openMenu());
   };
+
+  const dispatch = useDispatch();
 
   return (
     <>

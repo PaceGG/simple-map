@@ -1,5 +1,7 @@
 import { Box, Collapse, Button, Typography } from "@mui/material";
-import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../store";
+import { toggleMenu } from "../store/menuSlice";
 
 export type MenuData = {
   title: string;
@@ -13,14 +15,13 @@ interface SideMenuProps {
 }
 
 export default function SideMenu({ data }: SideMenuProps) {
-  const [expanded, setExpanded] = useState<boolean>(false);
-
-  const toggleMenu = () => setExpanded(!expanded);
+  const isOpen = useSelector((state: RootState) => state.menu.isOpen);
+  const dispatch = useDispatch();
 
   return (
     <Box display="flex" alignItems="start">
       {/* Меню */}
-      <Collapse in={expanded} orientation="horizontal">
+      <Collapse in={isOpen} orientation="horizontal">
         <Box
           width="400px"
           bgcolor="white"
@@ -49,10 +50,10 @@ export default function SideMenu({ data }: SideMenuProps) {
       <Box display="flex" alignItems="center" p={1}>
         <Button
           variant="contained"
-          onClick={toggleMenu}
+          onClick={() => dispatch(toggleMenu())}
           sx={{ pointerEvents: "all" }}
         >
-          {expanded ? "◄" : "►"}
+          {isOpen ? "◄" : "►"}
         </Button>
       </Box>
     </Box>
