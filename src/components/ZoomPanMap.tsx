@@ -361,23 +361,6 @@ export default function ZoomPanMap({
             </Box>
           ))}
         </Box>
-
-        {/* Масштаб (индикатор) */}
-        <Box
-          sx={{
-            position: "absolute",
-            right: 8,
-            bottom: 8,
-            bgcolor: "rgba(255,255,255,0.8)",
-            px: 1.5,
-            py: 0.5,
-            boxShadow: 1,
-            fontSize: 12,
-            userSelect: "none",
-          }}
-        >
-          {Math.round(scaleRef.current * 100)}%
-        </Box>
       </Paper>
     </>
   );
