@@ -15,6 +15,15 @@ import { closeModal } from "../store/modalSlice";
 import { PopupType, Organization, type Popup } from "../data";
 import { popupsApi } from "../api/popupsApi";
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 interface CreatePointModalProps {
   position: { x: number; y: number } | null;
 }
@@ -45,7 +54,7 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
     setImageError("");
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
 
@@ -60,11 +69,14 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
       setImageError("Выберите изображение");
       return;
     }
+
+    const base64 = await fileToBase64(image);
+
     const data: Popup = {
       id: Date.now(),
       organization: Organization[organizationKey],
       type: PopupType[typeKey],
-      image: "suburban.webp",
+      image: base64,
       position: position ?? { x: 0, y: 0 },
     };
     popupsApi.create(data);

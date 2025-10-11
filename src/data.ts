@@ -22,7 +22,7 @@ export type Point = {
 export type Popup = {
   id: number;
   position: Point;
-  image: string;
+  image: string; // base64
   organization: OrganizationKey;
   type: PopupTypeKey;
 };
