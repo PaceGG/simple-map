@@ -8,7 +8,7 @@ export type PopupTypeKey = (typeof PopupType)[keyof typeof PopupType];
 
 export const Organization = {
   CAP: {
-    name: "CAP",
+    name: "CAAP",
     logo: "no",
   },
 };
@@ -20,7 +20,7 @@ export type Point = {
 };
 
 export type Popup = {
-  id: string;
+  id: number;
   position: Point;
   image: string;
   organization: OrganizationKey;
@@ -29,7 +29,7 @@ export type Popup = {
 
 export const popups: Popup[] = [
   {
-    id: "clothes1",
+    id: 0,
     position: {
       x: 855.7147644035915,
       y: 96.19284223313588,

@@ -7,6 +7,7 @@ import type { Point, Popup } from "../data";
 import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
 import { CreatePointModal } from "./CreatePointModal";
 import { openModal } from "../store/modalSlice";
+import { popupsApi } from "../api/popupsApi";
 
 export interface Polygon {
   id: string;
@@ -22,7 +23,6 @@ interface ZoomPanMapProps {
   maxScale?: number;
   initialScale?: number;
   sx?: object;
-  popups?: Popup[];
   polygons?: Polygon[];
 }
 
@@ -37,9 +37,14 @@ export default function ZoomPanMap({
   maxScale = 4,
   initialScale = 1,
   sx = {},
-  popups = [],
   polygons = [],
 }: ZoomPanMapProps) {
+  const [popups, setPopups] = useState<Popup[]>([]);
+
+  useEffect(() => {
+    popupsApi.getAll().then(setPopups);
+  }, []);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stateRef = useRef<DragState>({
     dragging: false,

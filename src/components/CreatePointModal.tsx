@@ -12,7 +12,8 @@ import { useState, type FormEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import { closeModal } from "../store/modalSlice";
-import { PopupType, Organization } from "../data";
+import { PopupType, Organization, type Popup } from "../data";
+import { popupsApi } from "../api/popupsApi";
 
 interface CreatePointModalProps {
   position: { x: number; y: number } | null;
@@ -23,8 +24,9 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
   const isOpen = useSelector((state: RootState) => state.modal.isActive);
 
   const [name, setName] = useState("");
-  const [organization, setOrganization] = useState("");
-  const [type, setType] = useState("");
+  const [organizationKey, setOrganizationKey] =
+    useState<keyof typeof Organization>("CAP");
+  const [typeKey, setTypeKey] = useState<keyof typeof PopupType>("Clothes");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
 
@@ -37,8 +39,8 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
 
   const clearFields = () => {
     setName("");
-    setOrganization("");
-    setType("");
+    setOrganizationKey("CAP");
+    setTypeKey("Clothes");
     setImage(null);
     setImageError("");
   };
@@ -58,14 +60,14 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
       setImageError("Выберите изображение");
       return;
     }
-
-    console.log({
-      name,
-      organization,
-      type,
-      image,
-      position,
-    });
+    const data: Popup = {
+      id: Date.now(),
+      organization: Organization[organizationKey],
+      type: PopupType[typeKey],
+      image: "suburban.webp",
+      position: position ?? { x: 0, y: 0 },
+    };
+    popupsApi.create(data);
 
     clearFields();
     handleClose();
@@ -111,30 +113,32 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
 
         <TextField
           select
-          label="Тип точки"
+          label="Организация"
           required
           fullWidth
-          value={type}
-          onChange={(e) => setType(e.target.value)}
+          value={organizationKey}
+          onChange={(e) =>
+            setOrganizationKey(e.target.value as keyof typeof Organization)
+          }
         >
-          {Object.values(PopupType).map((t) => (
-            <MenuItem key={t.type} value={t.type}>
-              {t.type}
+          {Object.keys(Organization).map((key) => (
+            <MenuItem key={key} value={key}>
+              {Organization[key as keyof typeof Organization].name}
             </MenuItem>
           ))}
         </TextField>
 
         <TextField
           select
-          label="Организация"
+          label="Тип точки"
           required
           fullWidth
-          value={organization}
-          onChange={(e) => setOrganization(e.target.value)}
+          value={typeKey}
+          onChange={(e) => setTypeKey(e.target.value as keyof typeof PopupType)}
         >
-          {Object.values(Organization).map((o) => (
-            <MenuItem key={o.name} value={o.name}>
-              {o.name}
+          {Object.keys(PopupType).map((key) => (
+            <MenuItem key={key} value={key}>
+              {PopupType[key as keyof typeof PopupType].type}
             </MenuItem>
           ))}
         </TextField>
