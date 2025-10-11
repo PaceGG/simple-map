@@ -177,9 +177,7 @@ export default function ZoomPanMap({
   const handleClose = () => setAnchorPosition(null);
 
   const menuItems: ContextMenuItem[] = [
-    { label: "Действие 1", onClick: () => console.log("Action 1") },
-    { label: "Действие 2", onClick: () => console.log("Action 2") },
-    { label: "Действие 3", onClick: () => console.log("Action 3") },
+    { label: "Создать точку...", onClick: () => console.log("Action 1") },
   ];
 
   return (

@@ -1,5 +1,5 @@
 // ContextMenu.tsx
-import React from "react";
+import React, { useEffect, type MouseEvent } from "react";
 import { Menu, MenuItem, type PaperProps } from "@mui/material";
 
 export interface ContextMenuItem {
@@ -20,12 +20,18 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   onClose,
   paperProps,
 }) => {
+  const onContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    onClose();
+  };
+
   return (
     <Menu
       open={Boolean(anchorPosition)}
       onClose={onClose}
       anchorReference="anchorPosition"
       anchorPosition={anchorPosition ?? undefined}
+      onContextMenu={onContextMenu}
       PaperProps={{
         sx: { borderRadius: 2, minWidth: 150, boxShadow: 3 },
         ...paperProps,
