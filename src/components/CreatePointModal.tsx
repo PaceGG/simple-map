@@ -46,7 +46,6 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
   };
 
   const clearFields = () => {
-    setName("");
     setOrganizationKey("CAP");
     setTypeKey("Clothes");
     setImage(null);
