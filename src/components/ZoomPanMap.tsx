@@ -1,9 +1,10 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, type MouseEvent } from "react";
 import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
 import { useDispatch } from "react-redux";
 import { openMenu } from "../store/menuSlice";
 import type { Point, Popup } from "../data";
+import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
 
 export interface Polygon {
   id: string;
@@ -129,7 +130,7 @@ export default function ZoomPanMap({
     const el = containerRef.current;
     if (!el) return;
 
-    const onContextMenu = (e: MouseEvent) => {
+    const onContextMenu = (e: globalThis.MouseEvent) => {
       e.preventDefault(); // чтобы не открывалось контекстное меню
       const rect = el.getBoundingClientRect();
       const x = (e.clientX - rect.left - translate.x) / scale;
@@ -163,8 +164,31 @@ export default function ZoomPanMap({
 
   const dispatch = useDispatch();
 
+  const [anchorPosition, setAnchorPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setAnchorPosition({ top: event.clientY, left: event.clientX });
+  };
+
+  const handleClose = () => setAnchorPosition(null);
+
+  const menuItems: ContextMenuItem[] = [
+    { label: "Действие 1", onClick: () => console.log("Action 1") },
+    { label: "Действие 2", onClick: () => console.log("Action 2") },
+    { label: "Действие 3", onClick: () => console.log("Action 3") },
+  ];
+
   return (
     <>
+      <ContextMenu
+        items={menuItems}
+        anchorPosition={anchorPosition}
+        onClose={handleClose}
+      />
       <Box
         sx={{
           position: "absolute",
@@ -178,6 +202,7 @@ export default function ZoomPanMap({
       <Paper
         ref={containerRef}
         elevation={2}
+        onContextMenu={handleContextMenu}
         sx={{
           position: "relative",
           width: "100%",
