@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Box, Paper } from "@mui/material";
+import Menu, { type MenuData } from "./Menu";
 
 interface Point {
   x: number;
@@ -155,132 +156,156 @@ export default function ZoomPanMap({
     willChange: "transform",
   };
 
+  const [menuData, setMenuData] = useState<MenuData>({});
+
+  const selectPopup = (popup: Popup) => {
+    const newMenuData: MenuData = {
+      title: popup.title,
+      type: "Тип",
+      imgSrc: "suburban.webp",
+      logoSrc: "logo.webp",
+    };
+
+    setMenuData(newMenuData);
+  };
+
   return (
-    <Paper
-      ref={containerRef}
-      elevation={2}
-      sx={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        userSelect: "none",
-        touchAction: "none",
-        ...sx,
-      }}
-    >
+    <>
       <Box
         sx={{
           position: "absolute",
-          top: 0,
-          left: 0,
+          zIndex: 30,
+          height: "100%",
+          pointerEvents: "none",
+        }}
+      >
+        <Menu data={menuData} />
+      </Box>
+      <Paper
+        ref={containerRef}
+        elevation={2}
+        sx={{
+          position: "relative",
           width: "100%",
           height: "100%",
           overflow: "hidden",
+          userSelect: "none",
+          touchAction: "none",
+          ...sx,
         }}
       >
-        <Box sx={transformStyle}>
-          <Box
-            sx={{
-              position: "relative",
-              width: 1600,
-              height: 1200,
-              backgroundImage: `url(${backgroundUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
-        </Box>
-
-        {/* Полигоны */}
-        <svg
-          style={{
+        <Box
+          sx={{
             position: "absolute",
             top: 0,
             left: 0,
             width: "100%",
             height: "100%",
-            pointerEvents: "none",
-            zIndex: 5,
+            overflow: "hidden",
           }}
         >
-          {polygons?.map((polygon) => {
-            const pathD =
-              polygon.points
-                .map(
-                  (p, i) =>
-                    `${i === 0 ? "M" : "L"}${translate.x + p.x * scale},${
-                      translate.y + p.y * scale
-                    }`
-                )
-                .join(" ") + " Z";
+          <Box sx={transformStyle}>
+            <Box
+              sx={{
+                position: "relative",
+                width: 1600,
+                height: 1200,
+                backgroundImage: `url(${backgroundUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+          </Box>
+
+          {/* Полигоны */}
+          <svg
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 5,
+            }}
+          >
+            {polygons?.map((polygon) => {
+              const pathD =
+                polygon.points
+                  .map(
+                    (p, i) =>
+                      `${i === 0 ? "M" : "L"}${translate.x + p.x * scale},${
+                        translate.y + p.y * scale
+                      }`
+                  )
+                  .join(" ") + " Z";
+
+              return (
+                <path
+                  key={polygon.id}
+                  d={pathD}
+                  data-popup="1"
+                  fill={polygon.color || "rgba(0,0,255,0.3)"}
+                  stroke={polygon.strokeColor || "blue"}
+                  strokeWidth={2}
+                  style={{ pointerEvents: "auto", cursor: "pointer" }}
+                  onClick={() =>
+                    console.log(`Клик по полигону: ${polygon.title}`)
+                  }
+                />
+              );
+            })}
+          </svg>
+
+          {/* Попапы фиксированного размера */}
+          {popups.map((popup) => {
+            // Преобразуем координаты с учётом трансляции и масштаба
+            const left = translate.x + popup.position.x * scale - 16;
+            const top = translate.y + popup.position.y * scale - 16;
 
             return (
-              <path
-                key={polygon.id}
-                d={pathD}
+              <Box
+                key={popup.id}
                 data-popup="1"
-                fill={polygon.color || "rgba(0,0,255,0.3)"}
-                stroke={polygon.strokeColor || "blue"}
-                strokeWidth={2}
-                style={{ pointerEvents: "auto", cursor: "pointer" }}
-                onClick={() =>
-                  console.log(`Клик по полигону: ${polygon.title}`)
-                }
-              />
+                onClick={() => selectPopup(popup)}
+                sx={{
+                  position: "absolute",
+                  left,
+                  top,
+                  width: 32,
+                  height: 32,
+                  cursor: "pointer",
+                  userSelect: "none",
+                  zIndex: 10, // поверх карты
+                  pointerEvents: "auto", // обязательно, чтобы события мыши проходили
+                }}
+              >
+                <img
+                  src={popup.iconUrl}
+                  alt={popup.title}
+                  style={{ width: 32, height: 32, pointerEvents: "none" }} // чтобы клик шёл на Box, а не на img
+                />
+              </Box>
             );
           })}
-        </svg>
-
-        {/* Попапы фиксированного размера */}
-        {popups.map((popup) => {
-          // Преобразуем координаты с учётом трансляции и масштаба
-          const left = translate.x + popup.position.x * scale - 16;
-          const top = translate.y + popup.position.y * scale - 16;
-
-          return (
-            <Box
-              key={popup.id}
-              data-popup="1"
-              onClick={() => console.log(`Попап нажат: ${popup.title}`)}
-              sx={{
-                position: "absolute",
-                left,
-                top,
-                width: 32,
-                height: 32,
-                cursor: "pointer",
-                userSelect: "none",
-                zIndex: 10, // поверх карты
-                pointerEvents: "auto", // обязательно, чтобы события мыши проходили
-              }}
-            >
-              <img
-                src={popup.iconUrl}
-                alt={popup.title}
-                style={{ width: 32, height: 32, pointerEvents: "none" }} // чтобы клик шёл на Box, а не на img
-              />
-            </Box>
-          );
-        })}
-      </Box>
-
-      <Box
-        sx={{
-          position: "absolute",
-          right: 8,
-          bottom: 8,
-          bgcolor: "rgba(255,255,255,0.8)",
-          px: 1.5,
-          py: 0.5,
-          borderRadius: 1,
-          boxShadow: 1,
-          fontSize: 12,
-          userSelect: "none",
-        }}
-      >
-        {Math.round(scale * 100)}%
-      </Box>
-    </Paper>
+        </Box>
+        <Box
+          sx={{
+            position: "absolute",
+            right: 8,
+            bottom: 8,
+            bgcolor: "rgba(255,255,255,0.8)",
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1,
+            boxShadow: 1,
+            fontSize: 12,
+            userSelect: "none",
+          }}
+        >
+          {Math.round(scale * 100)}%
+        </Box>
+      </Paper>
+    </>
   );
 }
