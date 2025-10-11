@@ -26,9 +26,13 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 interface CreatePointModalProps {
   position: { x: number; y: number } | null;
+  pushPopup: (popup: Popup) => void;
 }
 
-export const CreatePointModal = ({ position }: CreatePointModalProps) => {
+export const CreatePointModal = ({
+  position,
+  pushPopup,
+}: CreatePointModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const isOpen = useSelector((state: RootState) => state.modal.isActive);
 
@@ -79,6 +83,7 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
     };
     popupsApi.create(data);
 
+    pushPopup(data);
     clearFields();
     handleClose();
   };

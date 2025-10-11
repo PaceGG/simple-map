@@ -45,6 +45,10 @@ export default function ZoomPanMap({
     popupsApi.getAll().then(setPopups);
   }, []);
 
+  const pushPopup = (newPopup: Popup) => {
+    setPopups([...popups, newPopup]);
+  };
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stateRef = useRef<DragState>({
     dragging: false,
@@ -200,7 +204,7 @@ export default function ZoomPanMap({
         anchorPosition={anchorPosition}
         onClose={handleClose}
       />
-      <CreatePointModal position={position} />
+      <CreatePointModal position={position} pushPopup={pushPopup} />
       <Box
         sx={{
           position: "absolute",
