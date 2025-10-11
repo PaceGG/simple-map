@@ -158,7 +158,7 @@ export default function ZoomPanMap({
     willChange: "transform",
   };
 
-  const [menuData, setMenuData] = useState<MenuData>({});
+  const [menuData, setMenuData] = useState<MenuData | null>(null);
 
   const selectPopup = (popup: Popup) => {
     const newMenuData: MenuData = {

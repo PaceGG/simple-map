@@ -8,7 +8,7 @@ export type MenuData = {
   type: string;
   imgSrc: string;
   logoSrc: string;
-};
+} | null;
 
 interface SideMenuProps {
   data: MenuData;
@@ -29,21 +29,25 @@ export default function SideMenu({ data }: SideMenuProps) {
           flexDirection="column"
           sx={{ pointerEvents: "all" }}
         >
-          <Box sx={{ position: "relative" }}>
-            <Box
-              component="img"
-              src={data.imgSrc}
-              display={"block"}
-              sx={{ width: "100%" }}
-            />
-            <Box
-              component="img"
-              src={data.logoSrc}
-              sx={{ position: "absolute", bottom: 5, left: 5 }}
-            />
-          </Box>
-          <Typography typography="h3">{data.title}</Typography>
-          <Typography typography="h5">{data.type}</Typography>
+          {data && (
+            <>
+              <Box sx={{ position: "relative" }}>
+                <Box
+                  component="img"
+                  src={data.imgSrc}
+                  display={"block"}
+                  sx={{ width: "100%" }}
+                />
+                <Box
+                  component="img"
+                  src={data.logoSrc}
+                  sx={{ position: "absolute", bottom: 5, left: 5 }}
+                />
+              </Box>
+              <Typography typography="h3">{data.title}</Typography>
+              <Typography typography="h5">{data.type}</Typography>
+            </>
+          )}
         </Box>
       </Collapse>
 
