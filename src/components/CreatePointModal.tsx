@@ -32,7 +32,6 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const isOpen = useSelector((state: RootState) => state.modal.isActive);
 
-  const [name, setName] = useState("");
   const [organizationKey, setOrganizationKey] =
     useState<keyof typeof Organization>("CAP");
   const [typeKey, setTypeKey] = useState<keyof typeof PopupType>("Clothes");
@@ -116,14 +115,6 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
         </Typography>
 
         <TextField
-          label="Название точки"
-          required
-          fullWidth
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <TextField
           select
           label="Организация"
           required
@@ -150,7 +141,14 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
         >
           {Object.keys(PopupType).map((key) => (
             <MenuItem key={key} value={key}>
-              {PopupType[key as keyof typeof PopupType].type}
+              <Stack direction={"row"} alignItems={"center"} gap={1}>
+                <img
+                  src={PopupType[key as keyof typeof PopupType].icon}
+                  alt=""
+                  style={{ width: 32, height: 32 }}
+                />
+                {PopupType[key as keyof typeof PopupType].type}
+              </Stack>
             </MenuItem>
           ))}
         </TextField>
