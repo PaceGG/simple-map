@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import ZoomPanMap, { type Popup } from "./components/ZoomPanMap";
+import ZoomPanMap, { type Polygon, type Popup } from "./components/ZoomPanMap";
 
 const popups: Popup[] = [
   {
@@ -40,10 +40,52 @@ const popups: Popup[] = [
   },
 ];
 
+const polygons: Polygon[] = [
+  {
+    id: "poly1",
+    title: "Полигон 1",
+    points: [
+      { x: 200, y: 150 },
+      { x: 400, y: 150 },
+      { x: 350, y: 300 },
+      { x: 180, y: 280 },
+    ],
+    color: "rgba(255,0,0,0.3)",
+    strokeColor: "red",
+  },
+  {
+    id: "poly2",
+    title: "Полигон 2",
+    points: [
+      { x: 600, y: 400 },
+      { x: 750, y: 450 },
+      { x: 700, y: 600 },
+      { x: 550, y: 580 },
+      { x: 500, y: 450 },
+    ],
+    color: "rgba(0,255,0,0.3)",
+    strokeColor: "green",
+  },
+  {
+    id: "poly3",
+    title: "Полигон 3",
+    points: [
+      { x: 1000, y: 200 },
+      { x: 1200, y: 220 },
+      { x: 1250, y: 350 },
+      { x: 1100, y: 400 },
+      { x: 1050, y: 300 },
+      { x: 1000, y: 250 },
+    ],
+    color: "rgba(0,0,255,0.3)",
+    strokeColor: "blue",
+  },
+];
+
 function App() {
   return (
     <Box height={"98vh"}>
-      <ZoomPanMap popups={popups} />
+      <ZoomPanMap popups={popups} polygons={polygons} />
     </Box>
   );
 }

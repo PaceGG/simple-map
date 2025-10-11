@@ -13,6 +13,14 @@ export interface Popup {
   title: string;
 }
 
+export interface Polygon {
+  id: string;
+  points: Point[];
+  color?: string;
+  strokeColor?: string;
+  title?: string;
+}
+
 interface ZoomPanMapProps {
   backgroundUrl?: string;
   minScale?: number;
@@ -20,6 +28,7 @@ interface ZoomPanMapProps {
   initialScale?: number;
   sx?: object;
   popups?: Popup[];
+  polygons?: Polygon[];
 }
 
 interface DragState {
@@ -34,6 +43,7 @@ export default function ZoomPanMap({
   initialScale = 1,
   sx = {},
   popups = [],
+  polygons = [],
 }: ZoomPanMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stateRef = useRef<DragState>({
@@ -181,6 +191,46 @@ export default function ZoomPanMap({
             }}
           />
         </Box>
+
+        {/* Полигоны */}
+        <svg
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            zIndex: 5,
+          }}
+        >
+          {polygons?.map((polygon) => {
+            const pathD =
+              polygon.points
+                .map(
+                  (p, i) =>
+                    `${i === 0 ? "M" : "L"}${translate.x + p.x * scale},${
+                      translate.y + p.y * scale
+                    }`
+                )
+                .join(" ") + " Z";
+
+            return (
+              <path
+                key={polygon.id}
+                d={pathD}
+                data-popup="1"
+                fill={polygon.color || "rgba(0,0,255,0.3)"}
+                stroke={polygon.strokeColor || "blue"}
+                strokeWidth={2}
+                style={{ pointerEvents: "auto", cursor: "pointer" }}
+                onClick={() =>
+                  console.log(`Клик по полигону: ${polygon.title}`)
+                }
+              />
+            );
+          })}
+        </svg>
 
         {/* Попапы фиксированного размера */}
         {popups.map((popup) => {
