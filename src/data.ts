@@ -121,3 +121,11 @@ export type Popup = {
   organization: OrganizationKey;
   type: PopupTypeKey;
 };
+
+export type PopupData = {
+  id: string;
+  position: Point;
+  image: string; // base64
+  organization: keyof typeof Organization;
+  type: keyof typeof PopupType;
+};
