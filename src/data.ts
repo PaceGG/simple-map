@@ -20,22 +20,9 @@ export type Point = {
 };
 
 export type Popup = {
-  id: number;
+  id: string;
   position: Point;
   image: string; // base64
   organization: OrganizationKey;
   type: PopupTypeKey;
 };
-
-export const popups: Popup[] = [
-  {
-    id: 0,
-    position: {
-      x: 855.7147644035915,
-      y: 96.19284223313588,
-    },
-    image: "no",
-    organization: Organization.CAP,
-    type: PopupType.Clothes,
-  },
-];

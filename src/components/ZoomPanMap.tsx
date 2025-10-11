@@ -155,6 +155,7 @@ export default function ZoomPanMap({
 
   const selectPopup = (popup: Popup) => {
     const newMenuData: MenuData = {
+      id: popup.id,
       title: popup.organization.name,
       type: popup.type.type,
       imgSrc: popup.image,

@@ -2,8 +2,10 @@ import { Box, Collapse, Button, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store";
 import { toggleMenu } from "../store/menuSlice";
+import { popupsApi } from "../api/popupsApi";
 
 export type MenuData = {
+  id: string;
   title: string;
   type: string;
   imgSrc: string;
@@ -51,6 +53,13 @@ export default function SideMenu({ data }: SideMenuProps) {
               </Box>
               <Typography typography="h3">{data.title}</Typography>
               <Typography typography="h5">{data.type}</Typography>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => popupsApi.delete(data.id)}
+              >
+                Удалить точку
+              </Button>
             </>
           )}
         </Box>

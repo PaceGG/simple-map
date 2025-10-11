@@ -71,7 +71,7 @@ export const CreatePointModal = ({ position }: CreatePointModalProps) => {
     const base64 = await fileToBase64(image);
 
     const data: Popup = {
-      id: Date.now(),
+      id: `${Date.now()}`,
       organization: Organization[organizationKey],
       type: PopupType[typeKey],
       image: base64,
