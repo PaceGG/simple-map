@@ -50,8 +50,8 @@ export const CreatePointModal = ({
   };
 
   const clearFields = () => {
-    setOrganizationKey("CAP");
-    setTypeKey("Clothes");
+    setOrganizationKey("House");
+    setTypeKey("House");
     setImage(null);
     setImageError("");
   };
