@@ -41,7 +41,12 @@ export default function SideMenu({ data }: SideMenuProps) {
                 <Box
                   component="img"
                   src={data.logoSrc}
-                  sx={{ position: "absolute", bottom: 5, left: 5 }}
+                  sx={{
+                    position: "absolute",
+                    bottom: 5,
+                    left: 5,
+                    filter: "drop-shadow(0px 4px 6px rgba(0,0,0,0.4))",
+                  }}
                 />
               </Box>
               <Typography typography="h3">{data.title}</Typography>
