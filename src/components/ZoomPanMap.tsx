@@ -49,6 +49,12 @@ export default function ZoomPanMap({
     setPopups([...popups, newPopup]);
   };
 
+  const delPopup = (delId: string) => {
+    const newPopups = popups.filter((p) => p.id !== delId);
+    setPopups(newPopups);
+    setMenuData(null);
+  };
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stateRef = useRef<DragState>({
     dragging: false,
@@ -213,7 +219,7 @@ export default function ZoomPanMap({
           pointerEvents: "none",
         }}
       >
-        <Menu data={menuData} />
+        <Menu data={menuData} delPopup={delPopup} />
       </Box>
       <Paper
         ref={containerRef}

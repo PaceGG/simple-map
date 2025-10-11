@@ -14,11 +14,17 @@ export type MenuData = {
 
 interface SideMenuProps {
   data: MenuData;
+  delPopup: (id: string) => void;
 }
 
-export default function SideMenu({ data }: SideMenuProps) {
+export default function SideMenu({ data, delPopup }: SideMenuProps) {
   const isOpen = useSelector((state: RootState) => state.menu.isOpen);
   const dispatch = useDispatch();
+
+  const deletePopup = (id: string) => {
+    popupsApi.delete(id);
+    delPopup(id);
+  };
 
   return (
     <Box display="flex" alignItems="start">
@@ -56,7 +62,7 @@ export default function SideMenu({ data }: SideMenuProps) {
               <Button
                 variant="contained"
                 color="error"
-                onClick={() => popupsApi.delete(data.id)}
+                onClick={() => deletePopup(data.id)}
               >
                 Удалить точку
               </Button>
