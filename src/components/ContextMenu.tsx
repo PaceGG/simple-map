@@ -1,5 +1,4 @@
-// ContextMenu.tsx
-import React, { useEffect, type MouseEvent } from "react";
+import React, { type MouseEvent } from "react";
 import { Menu, MenuItem, type PaperProps } from "@mui/material";
 
 export interface ContextMenuItem {

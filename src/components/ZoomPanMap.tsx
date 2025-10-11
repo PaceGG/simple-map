@@ -5,6 +5,8 @@ import { useDispatch } from "react-redux";
 import { openMenu } from "../store/menuSlice";
 import type { Point, Popup } from "../data";
 import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
+import { CreatePointModal } from "./CreatePointModal";
+import { openModal } from "../store/modalSlice";
 
 export interface Polygon {
   id: string;
@@ -132,10 +134,6 @@ export default function ZoomPanMap({
 
     const onContextMenu = (e: globalThis.MouseEvent) => {
       e.preventDefault(); // чтобы не открывалось контекстное меню
-      const rect = el.getBoundingClientRect();
-      const x = (e.clientX - rect.left - translate.x) / scale;
-      const y = (e.clientY - rect.top - translate.y) / scale;
-      console.log("Координаты на изображении:", { x, y });
     };
 
     el.addEventListener("contextmenu", onContextMenu);
@@ -169,15 +167,24 @@ export default function ZoomPanMap({
     left: number;
   } | null>(null);
 
+  const [position, setPosition] = useState<Point | null>(null);
+
   const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
+    const el = containerRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const x = Math.round((event.clientX - rect.left - translate.x) / scale);
+      const y = Math.round((event.clientY - rect.top - translate.y) / scale);
+      setPosition({ x, y });
+    }
     setAnchorPosition({ top: event.clientY, left: event.clientX });
   };
 
   const handleClose = () => setAnchorPosition(null);
 
   const menuItems: ContextMenuItem[] = [
-    { label: "Создать точку...", onClick: () => console.log("Action 1") },
+    { label: "Создать точку...", onClick: () => dispatch(openModal()) },
   ];
 
   return (
@@ -187,6 +194,7 @@ export default function ZoomPanMap({
         anchorPosition={anchorPosition}
         onClose={handleClose}
       />
+      <CreatePointModal position={position} />
       <Box
         sx={{
           position: "absolute",

@@ -3,7 +3,7 @@ export const PopupType = {
     type: "Магазин одежды",
     icon: "https://gtaundergroundmod.com/resources/media/blips/radar_tshirt.png",
   },
-} as const;
+};
 export type PopupTypeKey = (typeof PopupType)[keyof typeof PopupType];
 
 export const Organization = {
@@ -11,7 +11,7 @@ export const Organization = {
     name: "CAP",
     logo: "no",
   },
-} as const;
+};
 export type OrganizationKey = (typeof Organization)[keyof typeof Organization];
 
 export type Point = {
