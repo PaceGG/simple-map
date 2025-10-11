@@ -34,7 +34,7 @@ interface DragState {
 export default function ZoomPanMap({
   backgroundUrl = "map.png",
   minScale = 0.5,
-  maxScale = 4,
+  maxScale = 400,
   initialScale = 1,
   sx = {},
   polygons = [],
@@ -169,7 +169,7 @@ export default function ZoomPanMap({
       title: popup.organization.name,
       type: popup.type.type,
       imgSrc: popup.image,
-      logoSrc: "logo.webp",
+      logoSrc: popup.organization.logo,
     };
 
     setMenuData(newMenuData);
