@@ -39,6 +39,18 @@ export const PopupType = {
     type: "Автомат с холодным оружием",
     icon: "https://gtaundergroundmod.com/resources/media/blips/radar_emmetGun.png",
   },
+  Bio: {
+    type: "Автомат с инъекциями",
+    icon: "https://gtaundergroundmod.com/resources/media/blips/radar_gym.png",
+  },
+  Barber: {
+    type: "Парикмахерская",
+    icon: "https://gtaundergroundmod.com/resources/media/blips/radar_barbers.png",
+  },
+  SMI: {
+    type: "СМИ",
+    icon: "https://gtaundergroundmod.com/resources/media/blips/radar_dateDisco.png",
+  },
 };
 export type PopupTypeKey = (typeof PopupType)[keyof typeof PopupType];
 
@@ -57,6 +69,9 @@ export const Organization = {
   },
   Balls: {
     name: "Отель Balls",
+  },
+  Spiral: {
+    name: "Отель Spiral",
   },
   Church: {
     name: "Церковь",
@@ -78,6 +93,18 @@ export const Organization = {
   },
   Melee: {
     name: "Melee weapons",
+  },
+  StyleMachine: {
+    name: "Style Machine",
+  },
+  BarberMachine: {
+    name: "Barber Machine",
+  },
+  Bio: {
+    name: "Biotrans injection",
+  },
+  MTV: {
+    name: "Me TV News",
   },
 };
 export type OrganizationKey = (typeof Organization)[keyof typeof Organization];
