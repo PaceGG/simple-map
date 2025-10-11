@@ -4,9 +4,9 @@ import {
   TextField,
   Button,
   Typography,
-  MenuItem,
   FormHelperText,
   Stack,
+  Autocomplete,
 } from "@mui/material";
 import { useState, type FormEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -118,34 +118,33 @@ export const CreatePointModal = ({
           Создать точку ({position?.x};{position?.y})
         </Typography>
 
-        <TextField
-          select
-          label="Организация"
-          required
-          fullWidth
-          value={organizationKey}
-          onChange={(e) =>
-            setOrganizationKey(e.target.value as keyof typeof Organization)
+        <Autocomplete
+          options={Object.keys(Organization)}
+          getOptionLabel={(key) =>
+            Organization[key as keyof typeof Organization].name
           }
-        >
-          {Object.keys(Organization).map((key) => (
-            <MenuItem key={key} value={key}>
+          renderOption={(props, key) => (
+            <li {...props} key={key}>
               {Organization[key as keyof typeof Organization].name}
-            </MenuItem>
-          ))}
-        </TextField>
+            </li>
+          )}
+          renderInput={(params) => (
+            <TextField {...params} label="Организация" required fullWidth />
+          )}
+          value={organizationKey}
+          onChange={(event, newValue) =>
+            setOrganizationKey(newValue as keyof typeof Organization)
+          }
+        />
 
-        <TextField
-          select
-          label="Тип точки"
-          required
-          fullWidth
-          value={typeKey}
-          onChange={(e) => setTypeKey(e.target.value as keyof typeof PopupType)}
-        >
-          {Object.keys(PopupType).map((key) => (
-            <MenuItem key={key} value={key}>
-              <Stack direction={"row"} alignItems={"center"} gap={1}>
+        <Autocomplete
+          options={Object.keys(PopupType)}
+          getOptionLabel={(key) =>
+            PopupType[key as keyof typeof PopupType].type
+          }
+          renderOption={(props, key) => (
+            <li {...props} key={key}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <img
                   src={PopupType[key as keyof typeof PopupType].icon}
                   alt=""
@@ -153,9 +152,17 @@ export const CreatePointModal = ({
                 />
                 {PopupType[key as keyof typeof PopupType].type}
               </Stack>
-            </MenuItem>
-          ))}
-        </TextField>
+            </li>
+          )}
+          renderInput={(params) => (
+            <TextField {...params} label="Тип точки" required />
+          )}
+          value={typeKey}
+          onChange={(event, newValue) =>
+            setTypeKey(newValue as keyof typeof PopupType)
+          }
+          fullWidth
+        />
 
         <Box>
           <Button variant="outlined" component="label" fullWidth>
