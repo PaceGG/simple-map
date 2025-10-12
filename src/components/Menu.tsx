@@ -1,9 +1,12 @@
-import { Box, Collapse, Button, Typography } from "@mui/material";
+import { Box, Collapse, Button, Typography, Stack } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store";
 import { toggleMenu } from "../store/menuSlice";
 import { popupsApi } from "../api/popupsApi";
 import { polygonsApi } from "../api/polygonsApi";
+import { CreateCompanyModal } from "./CreateCompanyModal";
+import { openCompanyModal } from "../store/companyModalSlice";
+import type { Company } from "../types";
 
 export type MenuData = {
   id: string;
@@ -12,6 +15,7 @@ export type MenuData = {
   imgSrc: string;
   logoSrc: string;
   dataType: "popup" | "polygon";
+  companies?: Company[];
 } | null;
 
 interface SideMenuProps {
@@ -76,6 +80,25 @@ export default function SideMenu({
               <Typography typography="p">{data.id}</Typography>
               <Typography typography="h4">{data.title}</Typography>
               <Typography typography="h7">{data.type}</Typography>
+              {data.dataType === "polygon" && (
+                <>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Typography typography="h5">Организации:</Typography>
+                    <Button
+                      variant="contained"
+                      onClick={() => dispatch(openCompanyModal())}
+                    >
+                      +
+                    </Button>
+                  </Box>
+                  <Stack>
+                    {data.companies?.map((company) => (
+                      <Box>{company.organization.name}</Box>
+                    ))}
+                  </Stack>
+                  <CreateCompanyModal polygonId={data.id} />
+                </>
+              )}
               {data.dataType === "popup" && (
                 <Button
                   variant="contained"

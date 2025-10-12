@@ -24,9 +24,15 @@ export type PopupData = {
   type: keyof typeof PopupType;
 };
 
+export type Company = {
+  organization: OrganizationKey;
+  type: PopupTypeKey;
+};
+
 export type Polygon = {
   id: string;
   points: Point[];
   title: string;
   image: string; // base64
+  companies: Company[];
 };

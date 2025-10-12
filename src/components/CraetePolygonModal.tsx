@@ -79,6 +79,7 @@ export default function CreatePolygonModal({
       points,
       title: address,
       image: imageBase64, // сохраняем как base64
+      companies: [],
     };
 
     await polygonsApi.create(data);

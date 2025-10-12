@@ -357,6 +357,7 @@ export default function ZoomPanMap({
       imgSrc: polygon.image,
       logoSrc: "",
       dataType: "polygon",
+      companies: polygon.companies,
     };
     setMenuData(newMenuData);
     dispatch(openMenu());

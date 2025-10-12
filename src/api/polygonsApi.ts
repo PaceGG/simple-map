@@ -1,5 +1,5 @@
 import axios from "axios";
-import { type Polygon, type Point } from "../types";
+import { type Polygon, type Point, type Company } from "../types";
 
 const BASE_URL = "http://localhost:3001/polygons";
 
@@ -9,6 +9,7 @@ export type PolygonData = {
   points: Point[];
   title: string;
   image: string; // base64
+  companies: Company[];
 };
 
 // 🔹 File → base64
@@ -42,6 +43,7 @@ export async function toPolygonData(polygon: Polygon): Promise<PolygonData> {
     points: polygon.points,
     title: polygon.title,
     image: polygon.image || "",
+    companies: polygon.companies,
   };
 }
 
@@ -52,6 +54,7 @@ export function fromPolygonData(data: PolygonData): Polygon {
     points: data.points,
     title: data.title,
     image: data.image,
+    companies: data.companies,
   };
 }
 
@@ -61,14 +64,30 @@ export const polygonsApi = {
     const res = await axios.get<PolygonData[]>(BASE_URL);
     return res.data.map(fromPolygonData);
   },
+
   // Создаём новый полигон
   create: async (polygon: Polygon): Promise<Polygon> => {
     const polygonData = await toPolygonData(polygon);
     const res = await axios.post<PolygonData>(BASE_URL, polygonData);
     return fromPolygonData(res.data);
   },
+
   // Удаляем по id
   delete: async (id: string): Promise<void> => {
     await axios.delete(`${BASE_URL}/${id}`);
+  },
+
+  addCompany: async (polygonId: string, company: Company): Promise<Polygon> => {
+    const res = await axios.get<PolygonData>(`${BASE_URL}/${polygonId}`);
+    const polygonData = res.data;
+
+    polygonData.companies.push(company);
+
+    const updateRes = await axios.put<PolygonData>(
+      `${BASE_URL}/${polygonId}`,
+      polygonData
+    );
+
+    return fromPolygonData(updateRes.data);
   },
 };
