@@ -15,6 +15,7 @@ import {
 } from "../store/polygonModalSlice";
 import CreatePolygonModal from "./CraetePolygonModal";
 import type { RootState } from "../store";
+import { polygonsApi } from "../api/polygonsApi";
 
 interface ZoomPanMapProps {
   backgroundUrl?: string;
@@ -22,7 +23,6 @@ interface ZoomPanMapProps {
   maxScale?: number;
   initialScale?: number;
   sx?: object;
-  polygons?: Polygon[];
 }
 
 export default function ZoomPanMap({
@@ -31,7 +31,6 @@ export default function ZoomPanMap({
   maxScale = 400,
   initialScale = 1,
   sx = {},
-  polygons = [],
 }: ZoomPanMapProps) {
   const dispatch = useDispatch();
 
@@ -54,6 +53,15 @@ export default function ZoomPanMap({
     setPopups((prev) => prev.filter((p) => p.id !== delId));
     setMenuData(null);
   };
+
+  // --- Данные полигонов ---
+  const [polygons, setPolygons] = useState<Polygon[]>([]);
+
+  useEffect(() => {
+    polygonsApi.getAll().then((res) => {
+      setPolygons(res || []);
+    });
+  }, []);
 
   // --- refs для карты ---
   const containerRef = useRef<HTMLDivElement | null>(null);
