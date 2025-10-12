@@ -80,7 +80,6 @@ export const PopupType = {
     icon: "https://gtaundergroundmod.com/resources/media/blips/radar_gangS2.png",
   },
 };
-export type PopupTypeKey = (typeof PopupType)[keyof typeof PopupType];
 
 export const Organization = {
   CAP: {
@@ -149,26 +148,4 @@ export const Organization = {
   ItalianMafia: {
     name: "Итальянская Мафия",
   },
-};
-export type OrganizationKey = (typeof Organization)[keyof typeof Organization];
-
-export type Point = {
-  x: number;
-  y: number;
-};
-
-export type Popup = {
-  id: string;
-  position: Point;
-  image: string; // base64
-  organization: OrganizationKey;
-  type: PopupTypeKey;
-};
-
-export type PopupData = {
-  id: string;
-  position: Point;
-  image: string; // base64
-  organization: keyof typeof Organization;
-  type: keyof typeof PopupType;
 };

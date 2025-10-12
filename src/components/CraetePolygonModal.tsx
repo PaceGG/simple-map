@@ -8,7 +8,7 @@ import {
 } from "../store/polygonModalSlice";
 import { Box, Button, Modal, Paper, Stack, Typography } from "@mui/material";
 import type { FormEvent } from "react";
-import type { Point } from "../data";
+import type { Point } from "../types";
 
 interface CreatePointModalProps {
   points: Point[];

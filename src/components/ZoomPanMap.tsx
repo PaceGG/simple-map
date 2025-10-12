@@ -3,7 +3,7 @@ import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
 import { useDispatch, useSelector } from "react-redux";
 import { openMenu } from "../store/menuSlice";
-import type { Point, Popup } from "../data";
+import type { Point, Popup } from "../types";
 import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
 import { CreatePointModal } from "./CreatePointModal";
 import { openModal } from "../store/modalSlice";

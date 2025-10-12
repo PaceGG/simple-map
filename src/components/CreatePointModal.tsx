@@ -12,7 +12,8 @@ import { useState, type FormEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import { closeModal } from "../store/modalSlice";
-import { PopupType, Organization, type Popup } from "../data";
+import { type Popup } from "../types";
+import { PopupType, Organization } from "../data";
 import { popupsApi } from "../api/popupsApi";
 
 const fileToBase64 = (file: File): Promise<string> => {
