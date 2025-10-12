@@ -22,11 +22,13 @@ import { polygonsApi } from "../api/polygonsApi";
 interface CreatePointModalProps {
   points: Point[];
   onClose: () => void;
+  onSubmit: (polygon: Polygon) => void;
 }
 
 export default function CreatePolygonModal({
   points,
   onClose,
+  onSubmit,
 }: CreatePointModalProps) {
   const state: PolygonModalStates = useSelector(
     (state: RootState) => state.polygonModal.state
@@ -62,6 +64,7 @@ export default function CreatePolygonModal({
     };
     polygonsApi.create(data);
 
+    onSubmit(data);
     handleClose();
   };
 

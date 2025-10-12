@@ -66,6 +66,9 @@ export default function ZoomPanMap({
     polygonsRef.current = polygons;
     requestAnimationFrame(applyTransform);
   }, [polygons]);
+  const pushPolygon = (newPoly: Polygon) => {
+    setPolygons((prev) => [...prev, newPoly]);
+  };
 
   // --- refs для карты ---
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -355,7 +358,11 @@ export default function ZoomPanMap({
         onClose={handleClose}
       />
       <CreatePointModal position={position} pushPopup={pushPopup} />
-      <CreatePolygonModal points={polygonPoints} onClose={clearPoints} />
+      <CreatePolygonModal
+        points={polygonPoints}
+        onClose={clearPoints}
+        onSubmit={pushPolygon}
+      />
 
       {/* Панель информации */}
       <Box
