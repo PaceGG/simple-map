@@ -354,7 +354,7 @@ export default function ZoomPanMap({
       id: polygon.id,
       title: polygon.title,
       type: "",
-      imgSrc: "",
+      imgSrc: polygon.image,
       logoSrc: "",
       dataType: "polygon",
     };

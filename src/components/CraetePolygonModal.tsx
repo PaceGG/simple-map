@@ -9,6 +9,7 @@ import {
 import {
   Box,
   Button,
+  FormHelperText,
   Modal,
   Paper,
   Stack,
@@ -17,7 +18,7 @@ import {
 } from "@mui/material";
 import { useState, type FormEvent } from "react";
 import type { Point, Polygon } from "../types";
-import { polygonsApi } from "../api/polygonsApi";
+import { fileToBase64, polygonsApi } from "../api/polygonsApi";
 
 interface CreatePointModalProps {
   points: Point[];
@@ -36,6 +37,14 @@ export default function CreatePolygonModal({
   const dispatch = useDispatch<AppDispatch>();
 
   const [address, setAddress] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState("");
+
+  const handleFileChange = (fileList: FileList | null) => {
+    const file = fileList?.[0] || null;
+    setImage(file);
+    if (file) setImageError("");
+  };
 
   const openModal = () => dispatch(openPolygonModal());
   const handleClose = () => {
@@ -57,13 +66,22 @@ export default function CreatePolygonModal({
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!image) {
+      setImageError("Выберите изображение");
+      return;
+    }
+
+    // Конвертируем File в base64
+    const imageBase64 = await fileToBase64(image);
+
     const data: Polygon = {
       id: `${Date.now()}`,
       points,
       title: address,
+      image: imageBase64, // сохраняем как base64
     };
-    polygonsApi.create(data);
 
+    await polygonsApi.create(data);
     onSubmit(data);
     handleClose();
   };
@@ -161,6 +179,23 @@ export default function CreatePolygonModal({
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
+
+          <Box>
+            <Button variant="outlined" component="label" fullWidth>
+              {image ? image.name : "Загрузить изображение"}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => handleFileChange(e.target.files)}
+              />
+            </Button>
+            {imageError && (
+              <FormHelperText error sx={{ ml: 1 }}>
+                {imageError}
+              </FormHelperText>
+            )}
+          </Box>
 
           <Stack direction="row" justifyContent="space-between">
             <Button type="submit" variant="contained">

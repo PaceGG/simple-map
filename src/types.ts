@@ -28,4 +28,5 @@ export type Polygon = {
   id: string;
   points: Point[];
   title: string;
+  image: string; // base64
 };
