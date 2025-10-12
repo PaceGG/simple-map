@@ -389,7 +389,11 @@ export default function ZoomPanMap({
                   fill={polygon.color || "rgba(0,0,255,0.3)"}
                   stroke={polygon.strokeColor || "blue"}
                   strokeWidth={2}
-                  style={{ pointerEvents: "auto", cursor: "pointer" }}
+                  style={{
+                    pointerEvents:
+                      polygonModalState === "edit" ? "none" : "auto",
+                    cursor: "pointer",
+                  }}
                   onClick={() =>
                     console.log(`Клик по полигону: ${polygon.title}`)
                   }
@@ -442,7 +446,7 @@ export default function ZoomPanMap({
                 cursor: "pointer",
                 userSelect: "none",
                 zIndex: 30,
-                pointerEvents: "auto",
+                pointerEvents: polygonModalState === "edit" ? "none" : "auto",
               }}
             >
               <img
