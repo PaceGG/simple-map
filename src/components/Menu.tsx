@@ -57,8 +57,9 @@ export default function SideMenu({ data, delPopup }: SideMenuProps) {
                   }}
                 />
               </Box>
-              <Typography typography="h3">{data.title}</Typography>
-              <Typography typography="h5">{data.type}</Typography>
+              <Typography typography="p">{data.id}</Typography>
+              <Typography typography="h4">{data.title}</Typography>
+              <Typography typography="h7">{data.type}</Typography>
               <Button
                 variant="contained"
                 color="error"
