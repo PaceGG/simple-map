@@ -25,6 +25,7 @@ export type PopupData = {
 };
 
 export type Company = {
+  image: string; // base64
   organization: OrganizationKey;
   type: PopupTypeKey;
 };

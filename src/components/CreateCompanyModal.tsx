@@ -6,6 +6,7 @@ import {
   Typography,
   Stack,
   Autocomplete,
+  FormHelperText,
 } from "@mui/material";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,7 +14,7 @@ import type { AppDispatch, RootState } from "../store";
 import { type Company } from "../types";
 import { PopupType, Organization } from "../data";
 import { closeCompanyModal } from "../store/companyModalSlice";
-import { polygonsApi } from "../api/polygonsApi";
+import { fileToBase64, polygonsApi } from "../api/polygonsApi";
 // import { companiesApi } from "../api/companiesApi"; // предполагается, что есть API для компаний
 
 interface CreateCompanyModalProps {
@@ -28,6 +29,14 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
   const [organizationKey, setOrganizationKey] =
     useState<keyof typeof Organization>("CAP");
   const [typeKey, setTypeKey] = useState<keyof typeof PopupType>("Clothes");
+  const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState("");
+
+  const handleFileChange = (fileList: FileList | null) => {
+    const file = fileList?.[0] || null;
+    setImage(file);
+    if (file) setImageError("");
+  };
 
   const handleClose = () => dispatch(closeCompanyModal());
 
@@ -41,10 +50,18 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
     handleClose();
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!image) {
+      setImageError("Выберите изображение");
+      return;
+    }
+
+    const base64 = await fileToBase64(image);
+
     const data: Company = {
+      image: base64,
       organization: Organization[organizationKey],
       type: PopupType[typeKey],
     };
@@ -124,6 +141,23 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
           }
           fullWidth
         />
+
+        <Box>
+          <Button variant="outlined" component="label" fullWidth>
+            {image ? image.name : "Загрузить изображение"}
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => handleFileChange(e.target.files)}
+            />
+          </Button>
+          {imageError && (
+            <FormHelperText error sx={{ ml: 1 }}>
+              {imageError}
+            </FormHelperText>
+          )}
+        </Box>
 
         <Stack direction="row" justifyContent="space-between">
           <Button type="submit" variant="contained">
