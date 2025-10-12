@@ -308,7 +308,7 @@ export default function ZoomPanMap({
         onClose={handleClose}
       />
       <CreatePointModal position={position} pushPopup={pushPopup} />
-      <CreatePolygonModal />
+      <CreatePolygonModal points={polygonPoints} />
 
       {/* Панель информации */}
       <Box

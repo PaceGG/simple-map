@@ -8,8 +8,13 @@ import {
 } from "../store/polygonModalSlice";
 import { Box, Button, Modal, Paper, Stack, Typography } from "@mui/material";
 import type { FormEvent } from "react";
+import type { Point } from "../data";
 
-export default function CreatePolygonModal() {
+interface CreatePointModalProps {
+  points: Point[];
+}
+
+export default function CreatePolygonModal({ points }: CreatePointModalProps) {
   const state: PolygonModalStates = useSelector(
     (state: RootState) => state.polygonModal.state
   );
@@ -33,13 +38,8 @@ export default function CreatePolygonModal() {
     e.preventDefault();
     const form = e.currentTarget;
     console.log("создание");
+    console.log(points);
     handleClose();
-
-    // // Проверяем нативную валидацию остальных полей
-    // if (!form.checkValidity()) {
-    //   form.reportValidity();
-    //   return;
-    // }
   };
 
   const handleCancel = () => {
