@@ -125,6 +125,10 @@ export default function ZoomPanMap({
     });
   };
 
+  const polygonModalState: PolygonModalStates = useSelector(
+    (state: RootState) => state.polygonModal.state
+  );
+
   // --- drag / zoom ---
   useEffect(() => {
     const el = containerRef.current;
@@ -180,7 +184,7 @@ export default function ZoomPanMap({
     };
 
     const onPointerUp = (event: PointerEvent) => {
-      if (isDragging && !isMoved) {
+      if (isDragging && !isMoved && polygonModalState === "edit") {
         const el = containerRef.current;
         const target = event.target as HTMLElement | null;
         if (
@@ -221,7 +225,7 @@ export default function ZoomPanMap({
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [minScale, maxScale]);
+  }, [minScale, maxScale, polygonModalState]);
 
   // При изменении popups — обновляем реф и позиции
   useEffect(() => {
@@ -275,10 +279,6 @@ export default function ZoomPanMap({
   const removePoint = (index: number) => {
     setPolygonPoints((prev) => prev.filter((_, i) => i !== index));
   };
-
-  const polygonModalState: PolygonModalStates = useSelector(
-    (state: RootState) => state.polygonModal.state
-  );
 
   // --- выбор попапа ---
   const [menuData, setMenuData] = useState<MenuData | null>(null);
