@@ -513,7 +513,6 @@ export default function ZoomPanMap({
               key={popup.id}
               data-popup="1"
               onClick={(e) => {
-                // если было перемещение — не открываем меню
                 if (!isMovedRef.current) {
                   e.stopPropagation();
                   selectPopup(popup);

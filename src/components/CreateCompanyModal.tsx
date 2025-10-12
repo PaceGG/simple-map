@@ -110,37 +110,36 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
             <TextField {...params} label="Организация" required fullWidth />
           )}
           value={organizationKey}
-          onChange={(event, newValue) =>
-            setOrganizationKey(newValue as keyof typeof Organization)
-          }
+          onChange={(event, newValue) => {
+            if (!newValue) return;
+            setOrganizationKey(newValue as keyof typeof Organization);
+            // Автоустановка типа при выборе организации
+            setTypeKey(
+              Organization[newValue as keyof typeof Organization]
+                .type as keyof typeof PopupType
+            );
+          }}
         />
 
-        <Autocomplete
-          options={Object.keys(PopupType)}
-          getOptionLabel={(key) =>
-            PopupType[key as keyof typeof PopupType].type
-          }
-          renderOption={(props, key) => (
-            <li {...props} key={key}>
-              <Stack direction="row" alignItems="center" gap={1}>
-                <img
-                  src={PopupType[key as keyof typeof PopupType].icon}
-                  alt=""
-                  style={{ width: 32, height: 32 }}
-                />
-                {PopupType[key as keyof typeof PopupType].type}
-              </Stack>
-            </li>
-          )}
-          renderInput={(params) => (
-            <TextField {...params} label="Тип" required />
-          )}
-          value={typeKey}
-          onChange={(event, newValue) =>
-            setTypeKey(newValue as keyof typeof PopupType)
-          }
-          fullWidth
-        />
+        {/* Автоматический тип компании с иконкой */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            p: 1,
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 1,
+          }}
+        >
+          <img
+            src={PopupType[typeKey].icon}
+            alt={PopupType[typeKey].type}
+            style={{ width: 32, height: 32 }}
+          />
+          <Typography>{PopupType[typeKey].type}</Typography>
+        </Box>
 
         <Box>
           <Button variant="outlined" component="label" fullWidth>

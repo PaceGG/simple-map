@@ -82,70 +82,26 @@ export const PopupType = {
 };
 
 export const Organization = {
-  CAP: {
-    name: "CAP",
-  },
-  SNR: {
-    name: "Soap & Rope",
-  },
-  House: {
-    name: "Частный жилой дом",
-  },
-  Apartment: {
-    name: "Многоквартирный дом",
-  },
-  Balls: {
-    name: "Отель Balls",
-  },
-  Spiral: {
-    name: "Отель Spiral",
-  },
-  Church: {
-    name: "Церковь",
-  },
-  Ganja: {
-    name: "Ganja Shot",
-  },
-  Biotrans: {
-    name: "Biotrans salon",
-  },
-  Serivce: {
-    name: "Service",
-  },
-  Parking: {
-    name: "Парковка",
-  },
-  BoohLo: {
-    name: "Booh-Lo",
-  },
-  Melee: {
-    name: "Melee weapons",
-  },
-  StyleMachine: {
-    name: "Style Machine",
-  },
-  BarberMachine: {
-    name: "Barber Machine",
-  },
-  Bio: {
-    name: "Biotrans injection",
-  },
-  MTV: {
-    name: "Me TV News",
-  },
-  Ammu: {
-    name: "Ammu-Nation",
-  },
-  Weapons: {
-    name: "WEAPONS",
-  },
-  Konopolis: {
-    name: "Конополис",
-  },
-  Oasis: {
-    name: "Отель Оазис",
-  },
-  ItalianMafia: {
-    name: "Итальянская Мафия",
-  },
+  CAP: { name: "CAP", type: "Store" },
+  SNR: { name: "Soap & Rope", type: "Store" },
+  House: { name: "Частный жилой дом", type: "House" },
+  Apartment: { name: "Многоквартирный дом", type: "Apartments" },
+  Balls: { name: "Отель Balls", type: "Hotel" },
+  Spiral: { name: "Отель Spiral", type: "Hotel" },
+  Church: { name: "Церковь", type: "Church" },
+  Ganja: { name: "Ganja Shot", type: "Weed" },
+  Biotrans: { name: "Biotrans salon", type: "Bio" },
+  Serivce: { name: "Service", type: "Garage" },
+  Parking: { name: "Парковка", type: "Parking" },
+  BoohLo: { name: "Booh-Lo", type: "Store" },
+  Melee: { name: "Melee weapons", type: "Melee" },
+  StyleMachine: { name: "Style Machine", type: "Energy" },
+  BarberMachine: { name: "Barber Machine", type: "Barber" },
+  Bio: { name: "Biotrans injection", type: "Bio" },
+  MTV: { name: "Me TV News", type: "SMI" },
+  Ammu: { name: "Ammu-Nation", type: "Gunshop" },
+  Weapons: { name: "WEAPONS", type: "Gunshop" },
+  Konopolis: { name: "Конополис", type: "Store" },
+  Oasis: { name: "Отель Оазис", type: "Hotel" },
+  ItalianMafia: { name: "Итальянская Мафия", type: "MafiaItaly" },
 };
