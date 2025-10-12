@@ -116,7 +116,8 @@ export const CreatePointModal = ({
         }}
       >
         <Typography variant="h5" sx={{ mb: 1 }}>
-          Создать точку ({position?.x};{position?.y})
+          Создать точку ({position?.x && <span>{Math.round(position.x)}</span>};{" "}
+          {position?.y && <span>{Math.round(position.y)}</span>})
         </Typography>
 
         <Autocomplete

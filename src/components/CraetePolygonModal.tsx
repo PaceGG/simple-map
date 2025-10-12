@@ -142,7 +142,7 @@ export default function CreatePolygonModal({
               return (
                 <span>
                   {"{"}
-                  {p.x}; {p.y}
+                  {Math.round(p.x)}; {Math.round(p.y)}
                   {"}"}
                 </span>
               );
