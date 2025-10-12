@@ -69,6 +69,10 @@ export default function ZoomPanMap({
   const pushPolygon = (newPoly: Polygon) => {
     setPolygons((prev) => [...prev, newPoly]);
   };
+  const delPolygon = (delId: string) => {
+    setPolygons((prev) => prev.filter((p) => p.id !== delId));
+    setMenuData(null);
+  };
 
   // --- refs для карты ---
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -330,7 +334,7 @@ export default function ZoomPanMap({
     setPolygonPoints([]);
   };
 
-  // --- выбор попапа ---
+  // --- выбор меню ---
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const selectPopup = (popup: Popup) => {
     const newMenuData: MenuData = {
@@ -339,6 +343,20 @@ export default function ZoomPanMap({
       type: popup.type.type,
       imgSrc: popup.image,
       logoSrc: popup.organization.logo,
+      dataType: "popup",
+    };
+    setMenuData(newMenuData);
+    dispatch(openMenu());
+  };
+
+  const selectPolygon = (polygon: Polygon) => {
+    const newMenuData: MenuData = {
+      id: polygon.id,
+      title: polygon.title,
+      type: "",
+      imgSrc: "",
+      logoSrc: "",
+      dataType: "polygon",
     };
     setMenuData(newMenuData);
     dispatch(openMenu());
@@ -373,7 +391,7 @@ export default function ZoomPanMap({
           pointerEvents: "none",
         }}
       >
-        <Menu data={menuData} delPopup={delPopup} />
+        <Menu data={menuData} delPopup={delPopup} delPolygon={delPolygon} />
       </Box>
 
       <Paper
@@ -471,6 +489,7 @@ export default function ZoomPanMap({
                   if (!isMovedRef.current) {
                     e.stopPropagation();
                     console.log(`Клик по полигону: ${polygon.title}`);
+                    selectPolygon(polygon);
                   }
                 }}
               />
