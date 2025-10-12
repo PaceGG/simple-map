@@ -513,33 +513,31 @@ export default function ZoomPanMap({
           ))}
 
           {/* Временные точки полигона — позиционирование делает applyTransform по id */}
-          {polygonPoints.map((p, i) => {
-            return (
-              <Box
-                id={`temp-${i}`}
-                key={i}
-                data-temp="1"
-                sx={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  backgroundColor: "yellow",
-                  border: "1.5px solid black",
-                  cursor: "pointer",
-                  pointerEvents: "auto",
-                  zIndex: 25,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removePoint(i);
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-              />
-            );
-          })}
+          {polygonPoints.map((p, i) => (
+            <img
+              id={`temp-${i}`}
+              key={i}
+              data-temp="1"
+              src="https://docs-backend.fivem.net/blips/radar_incapacitated.png"
+              alt=""
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: 32,
+                height: 32,
+                cursor: "pointer",
+                pointerEvents: "auto",
+                zIndex: 25,
+                userSelect: "none",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                removePoint(i);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          ))}
         </Box>
       </Paper>
     </>
