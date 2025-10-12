@@ -91,7 +91,7 @@ export default function ZoomPanMap({
     img.src = backgroundUrl;
 
     let cancelled = false;
-    const MAX_INTERNAL = 8192;
+    const MAX_INTERNAL = 20000;
 
     const draw = () => {
       if (cancelled) return;
