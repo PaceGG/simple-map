@@ -56,12 +56,16 @@ export default function ZoomPanMap({
 
   // --- Данные полигонов ---
   const [polygons, setPolygons] = useState<Polygon[]>([]);
-
+  const polygonsRef = useRef<Polygon[]>([]);
   useEffect(() => {
     polygonsApi.getAll().then((res) => {
       setPolygons(res || []);
     });
   }, []);
+  useEffect(() => {
+    polygonsRef.current = polygons;
+    requestAnimationFrame(applyTransform);
+  }, [polygons]);
 
   // --- refs для карты ---
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -73,7 +77,7 @@ export default function ZoomPanMap({
   const clamp = (v: number, a: number, b: number) =>
     Math.max(a, Math.min(b, v));
 
-  // applyTransform — обновляет transform для карты и позиции попапов (в пикселях)
+  // applyTransform — обновляет transform для карты и позицию попапов/овера (в пикселях)
   const applyTransform = () => {
     const mapEl = mapLayerRef.current;
     const popupLayer = popupLayerRef.current;
@@ -83,6 +87,7 @@ export default function ZoomPanMap({
     const s = scaleRef.current;
     mapEl.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
 
+    // --- Попапы: позиционируем как раньше (screen coords) ---
     const currentPopups = popupsRef.current;
     for (const p of currentPopups) {
       const dom = document.getElementById(`popup-${p.id}`);
@@ -100,6 +105,7 @@ export default function ZoomPanMap({
       el.style.height = `32px`;
     }
 
+    // --- Временные точки полигона (HTML элементы) ---
     const tempPoints = polygonPointsRef.current;
     for (let i = 0; i < tempPoints.length; i++) {
       const p = tempPoints[i];
@@ -114,15 +120,58 @@ export default function ZoomPanMap({
       el.style.height = `32px`;
     }
 
-    const desiredScreenRadius = 16;
-    const tempCircles = mapEl.querySelectorAll('circle[data-temp="1"]');
-    const rSvg = desiredScreenRadius / s;
-    const strokeScreen = 1.5;
-    const strokeSvg = strokeScreen / s;
-    tempCircles.forEach((c) => {
-      (c as SVGCircleElement).setAttribute("r", String(rSvg));
-      (c as SVGCircleElement).setAttribute("stroke-width", String(strokeSvg));
-    });
+    // --- Полигоны: теперь рендерим их в non-scaled SVG (овере) и обновляем path в screen coords ---
+    const overlaySvg = popupLayer.querySelector("svg#overlay-polygons");
+    if (overlaySvg) {
+      const polys = polygonsRef.current;
+      for (const poly of polys) {
+        const pathEl = overlaySvg.querySelector(
+          `#polygon-${poly.id}`
+        ) as SVGPathElement | null;
+        if (!pathEl) continue;
+        // построим путь в экранных координатах
+        const d =
+          poly.points
+            .map((p, i) => {
+              const sx = Math.round(translateRef.current.x + p.x * s);
+              const sy = Math.round(translateRef.current.y + p.y * s);
+              return `${i === 0 ? "M" : "L"}${sx},${sy}`;
+            })
+            .join(" ") + " Z";
+        pathEl.setAttribute("d", d);
+        // fill и stroke оставляем так, чтобы выглядеть стабильно на экране
+        pathEl.setAttribute("fill", poly.color || "rgba(0,0,255,0.3)");
+        pathEl.setAttribute("stroke", poly.strokeColor || "blue");
+        // толщина обводки в пикселях — не зависит от scale, поэтому просто 2
+        pathEl.setAttribute("stroke-width", String(2));
+        pathEl.style.pointerEvents =
+          polygonModalState === "edit" ? "none" : "auto";
+        pathEl.style.cursor = "pointer";
+      }
+
+      // временный полигон (точки polygonPointsRef)
+      if (polygonPointsRef.current.length > 1) {
+        const tempEl = overlaySvg.querySelector(
+          `#polygon-temp`
+        ) as SVGPathElement | null;
+        if (tempEl) {
+          const d =
+            polygonPointsRef.current
+              .map((p, i) => {
+                const sx = Math.round(translateRef.current.x + p.x * s);
+                const sy = Math.round(translateRef.current.y + p.y * s);
+                return `${i === 0 ? "M" : "L"}${sx},${sy}`;
+              })
+              .join(" ") + " Z";
+          tempEl.setAttribute("d", d);
+        }
+      } else {
+        const tempEl = overlaySvg.querySelector(
+          `#polygon-temp`
+        ) as SVGPathElement | null;
+        if (tempEl) tempEl.setAttribute("d", "");
+      }
+    }
   };
 
   const polygonModalState: PolygonModalStates = useSelector(
@@ -264,10 +313,9 @@ export default function ZoomPanMap({
     },
   ];
 
-  // --- добавление полигона
+  // --- добавление полигона ---
   const [polygonPoints, setPolygonPoints] = useState<Point[]>([]);
   const polygonPointsRef = useRef<Point[]>([]);
-
   useEffect(() => {
     polygonPointsRef.current = polygonPoints;
     requestAnimationFrame(applyTransform);
@@ -366,63 +414,7 @@ export default function ZoomPanMap({
               backgroundPosition: "center",
             }}
           />
-
-          {/* Полигоны (в масштабе) */}
-          <svg
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              pointerEvents: "none",
-              zIndex: 5,
-            }}
-          >
-            {polygons.map((polygon) => {
-              const pathD =
-                polygon.points
-                  .map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`)
-                  .join(" ") + " Z";
-              return (
-                <path
-                  key={polygon.id}
-                  d={pathD}
-                  data-popup="1"
-                  fill={polygon.color || "rgba(0,0,255,0.3)"}
-                  stroke={polygon.strokeColor || "blue"}
-                  strokeWidth={2}
-                  style={{
-                    pointerEvents:
-                      polygonModalState === "edit" ? "none" : "auto",
-                    cursor: "pointer",
-                  }}
-                  onClick={(e) => {
-                    // Открывать только если не было drag-а
-                    if (!isMovedRef.current) {
-                      e.stopPropagation();
-                      console.log(`Клик по полигону: ${polygon.title}`);
-                      // если нужно — открыть редактор:
-                      // dispatch(openPolygonEditor(polygon.id));
-                    }
-                  }}
-                />
-              );
-            })}
-            {/* Отрисовка временного полигона из точек */}
-            {polygonPoints.length > 1 && (
-              <path
-                d={
-                  polygonPoints
-                    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`)
-                    .join(" ") + " Z"
-                }
-                fill="rgba(0,255,0,0.25)"
-                stroke="limegreen"
-                strokeWidth={2}
-              />
-            )}
-          </svg>
+          {/* ПОЛИГОНОВ БОЛЬШЕ НЕТ ЗДЕСЬ — они рисуются в non-scaled оверле */}
         </Box>
 
         {/* Слой попапов и временных точек — НЕ масштабируется */}
@@ -438,6 +430,54 @@ export default function ZoomPanMap({
             zIndex: 20,
           }}
         >
+          {/* Оверлейный SVG — здесь рендерим полигоны в screen coords (не масштабируем) */}
+          <svg
+            id="overlay-polygons"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none", // Svg сам решает pointer-events для path-ов
+              zIndex: 5,
+            }}
+          >
+            {/* Полигоны: рендерим path-ы с id, d будет устанавливаться в applyTransform */}
+            {polygons.map((polygon) => (
+              <path
+                key={polygon.id}
+                id={`polygon-${polygon.id}`}
+                d={""}
+                // initial атрибуты; final значения ставит applyTransform
+                fill={polygon.color || "rgba(0,0,255,0.3)"}
+                stroke={polygon.strokeColor || "blue"}
+                strokeWidth={2}
+                style={{
+                  pointerEvents: polygonModalState === "edit" ? "none" : "auto",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  // Открывать только если не было drag-а
+                  if (!isMovedRef.current) {
+                    e.stopPropagation();
+                    console.log(`Клик по полигону: ${polygon.title}`);
+                    // dispatch(openPolygonEditor(polygon.id));
+                  }
+                }}
+              />
+            ))}
+
+            {/* Временный полигон из polygonPoints (овера). applyTransform обновит d */}
+            <path
+              id="polygon-temp"
+              d={""}
+              fill="rgba(0,255,0,0.25)"
+              stroke="limegreen"
+              strokeWidth={2}
+            />
+          </svg>
+
           {/* Попапы */}
           {popups.map((popup) => (
             <Box
@@ -485,7 +525,6 @@ export default function ZoomPanMap({
                 data-temp="1"
                 sx={{
                   position: "absolute",
-                  // left/top будут выставляться в applyTransform, всё что тут — начальные/статичные стили
                   left: 0,
                   top: 0,
                   width: 32,
