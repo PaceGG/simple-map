@@ -83,7 +83,6 @@ export default function ZoomPanMap({
     const s = scaleRef.current;
     mapEl.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
 
-    // обновляем DOM-позиции попапов (фиксированный размер 32px)
     const currentPopups = popupsRef.current;
     for (const p of currentPopups) {
       const dom = document.getElementById(`popup-${p.id}`);
@@ -101,16 +100,26 @@ export default function ZoomPanMap({
       el.style.height = `32px`;
     }
 
-    // --- НОВОЕ: фиксированный экранный радиус временных точек полигона ---
-    // мы хотим, чтобы временные точки выглядели как попапы — фиксированный размер в px
-    // desiredScreenRadius задаёт радиус в пикселях на экране (16px -> диаметр 32px как у попапов)
+    const tempPoints = polygonPointsRef.current;
+    for (let i = 0; i < tempPoints.length; i++) {
+      const p = tempPoints[i];
+      const dom = document.getElementById(`temp-${i}`);
+      if (!dom) continue;
+      const screenX = Math.round(translateRef.current.x + p.x * s - 16);
+      const screenY = Math.round(translateRef.current.y + p.y * s - 16);
+      const el = dom as HTMLElement;
+      el.style.left = `${screenX}px`;
+      el.style.top = `${screenY}px`;
+      el.style.width = `32px`;
+      el.style.height = `32px`;
+    }
+
     const desiredScreenRadius = 16;
     const tempCircles = mapEl.querySelectorAll('circle[data-temp="1"]');
-    const rSvg = desiredScreenRadius / s; // радиус в координатах SVG, чтобы на экране было fixed px
-    const strokeScreen = 1.5; // желаемая толщина обводки в px на экране
+    const rSvg = desiredScreenRadius / s;
+    const strokeScreen = 1.5;
     const strokeSvg = strokeScreen / s;
     tempCircles.forEach((c) => {
-      // SVGCircleElement attributes
       (c as SVGCircleElement).setAttribute("r", String(rSvg));
       (c as SVGCircleElement).setAttribute("stroke-width", String(strokeSvg));
     });
@@ -173,17 +182,27 @@ export default function ZoomPanMap({
     const onPointerUp = (event: PointerEvent) => {
       if (isDragging && !isMoved) {
         const el = containerRef.current;
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const scale = scaleRef.current;
-          const translate = translateRef.current;
-          const x = Math.round(
-            (event.clientX - rect.left - translate.x) / scale
-          );
-          const y = Math.round(
-            (event.clientY - rect.top - translate.y) / scale
-          );
-          addPoint({ x, y });
+        const target = event.target as HTMLElement | null;
+        if (
+          !(
+            target &&
+            (target.closest('[data-popup="1"]') ||
+              target.closest('[data-temp="1"]') ||
+              target.closest("svg"))
+          )
+        ) {
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const scale = scaleRef.current;
+            const translate = translateRef.current;
+            const x = Math.round(
+              (event.clientX - rect.left - translate.x) / scale
+            );
+            const y = Math.round(
+              (event.clientY - rect.top - translate.y) / scale
+            );
+            addPoint({ x, y });
+          }
         }
       }
       isDragging = false;
@@ -243,12 +262,18 @@ export default function ZoomPanMap({
 
   // --- добавление полигона
   const [polygonPoints, setPolygonPoints] = useState<Point[]>([]);
+  const polygonPointsRef = useRef<Point[]>([]);
+
+  useEffect(() => {
+    polygonPointsRef.current = polygonPoints;
+    requestAnimationFrame(applyTransform);
+  }, [polygonPoints]);
 
   const addPoint = (point: Point) => {
     setPolygonPoints((prev) => [...prev, point]);
   };
   const removePoint = (index: number) => {
-    setPolygonPoints(polygonPoints.filter((_, i) => i !== index));
+    setPolygonPoints((prev) => prev.filter((_, i) => i !== index));
   };
 
   const polygonModalState: PolygonModalStates = useSelector(
@@ -385,29 +410,10 @@ export default function ZoomPanMap({
                 strokeWidth={2}
               />
             )}
-
-            {/* Отрисовка точек (временно) */}
-            {polygonPoints.map((p, i) => (
-              <circle
-                key={i}
-                cx={p.x}
-                cy={p.y}
-                r={8} // initial value — будет подправлен в applyTransform для фиксированного экранного размера
-                data-temp="1" // помечаем чтобы можно было менять r в DOM без ререндера
-                fill="yellow"
-                stroke="black"
-                strokeWidth={1.5}
-                style={{ cursor: "pointer", pointerEvents: "auto" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removePoint(i);
-                }}
-              />
-            ))}
           </svg>
         </Box>
 
-        {/* Слой попапов — НЕ масштабируется */}
+        {/* Слой попапов и временных точек — НЕ масштабируется */}
         <Box
           ref={popupLayerRef}
           sx={{
@@ -416,10 +422,11 @@ export default function ZoomPanMap({
             left: 0,
             width: "100%",
             height: "100%",
-            pointerEvents: "none", // контейнер не ловит, сами попапы будут иметь pointerEvents:auto
+            pointerEvents: "none",
             zIndex: 20,
           }}
         >
+          {/* Попапы */}
           {popups.map((popup) => (
             <Box
               id={`popup-${popup.id}`}
@@ -450,6 +457,36 @@ export default function ZoomPanMap({
               />
             </Box>
           ))}
+
+          {/* Временные точки полигона — позиционирование делает applyTransform по id */}
+          {polygonPoints.map((p, i) => {
+            return (
+              <Box
+                id={`temp-${i}`}
+                key={i}
+                data-temp="1"
+                sx={{
+                  position: "absolute",
+                  // left/top будут выставляться в applyTransform, всё что тут — начальные/статичные стили
+                  left: 0,
+                  top: 0,
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  backgroundColor: "yellow",
+                  border: "1.5px solid black",
+                  cursor: "pointer",
+                  pointerEvents: "auto",
+                  zIndex: 25,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removePoint(i);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+              />
+            );
+          })}
         </Box>
       </Paper>
     </>
