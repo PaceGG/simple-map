@@ -49,7 +49,7 @@ export default function CreatePolygonModal({ points }: CreatePointModalProps) {
     e.preventDefault();
 
     const data: Polygon = {
-      id: `${Date.now}`,
+      id: `${Date.now()}`,
       points,
       title: address,
     };
