@@ -6,9 +6,18 @@ import {
   openPolygonModal,
   type PolygonModalStates,
 } from "../store/polygonModalSlice";
-import { Box, Button, Modal, Paper, Stack, Typography } from "@mui/material";
-import type { FormEvent } from "react";
-import type { Point } from "../types";
+import {
+  Box,
+  Button,
+  Modal,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useState, type FormEvent } from "react";
+import type { Point, Polygon } from "../types";
+import { polygonsApi } from "../api/polygonsApi";
 
 interface CreatePointModalProps {
   points: Point[];
@@ -19,6 +28,8 @@ export default function CreatePolygonModal({ points }: CreatePointModalProps) {
     (state: RootState) => state.polygonModal.state
   );
   const dispatch = useDispatch<AppDispatch>();
+
+  const [address, setAddress] = useState("");
 
   const openModal = () => dispatch(openPolygonModal());
   const handleClose = () => dispatch(closePolygonModal());
@@ -36,9 +47,14 @@ export default function CreatePolygonModal({ points }: CreatePointModalProps) {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    console.log("создание");
-    console.log(points);
+
+    const data: Polygon = {
+      id: `${Date.now}`,
+      points,
+      title: address,
+    };
+    polygonsApi.create(data);
+
     handleClose();
   };
 
@@ -97,6 +113,7 @@ export default function CreatePolygonModal({ points }: CreatePointModalProps) {
             position: "absolute",
             top: "50%",
             left: "50%",
+            maxWidth: 350,
             transform: "translate(-50%, -50%)",
             bgcolor: "background.paper",
             p: 4,
@@ -112,9 +129,28 @@ export default function CreatePolygonModal({ points }: CreatePointModalProps) {
             Создать полигон
           </Typography>
 
+          <Typography>
+            Точки:{" "}
+            {points.map((p) => {
+              return (
+                <span>
+                  {"{"}
+                  {p.x}; {p.y}
+                  {"}"}
+                </span>
+              );
+            })}
+          </Typography>
           <Button variant="outlined" onClick={handleEditor}>
             Добавить точки
           </Button>
+
+          <TextField
+            required
+            label="Адрес"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
 
           <Stack direction="row" justifyContent="space-between">
             <Button type="submit" variant="contained">

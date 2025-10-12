@@ -23,3 +23,9 @@ export type PopupData = {
   organization: keyof typeof Organization;
   type: keyof typeof PopupType;
 };
+
+export type Polygon = {
+  id: string;
+  points: Point[];
+  title: string;
+};

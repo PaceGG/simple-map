@@ -3,7 +3,7 @@ import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
 import { useDispatch, useSelector } from "react-redux";
 import { openMenu } from "../store/menuSlice";
-import type { Point, Popup } from "../types";
+import type { Point, Polygon, Popup } from "../types";
 import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
 import { CreatePointModal } from "./CreatePointModal";
 import { openModal } from "../store/modalSlice";
@@ -15,14 +15,6 @@ import {
 } from "../store/polygonModalSlice";
 import CreatePolygonModal from "./CraetePolygonModal";
 import type { RootState } from "../store";
-
-export interface Polygon {
-  id: string;
-  points: Point[];
-  color?: string;
-  strokeColor?: string;
-  title?: string;
-}
 
 interface ZoomPanMapProps {
   backgroundUrl?: string;
