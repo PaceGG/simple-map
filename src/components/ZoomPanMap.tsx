@@ -1,13 +1,20 @@
 import { useRef, useState, useEffect, type MouseEvent } from "react";
 import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { openMenu } from "../store/menuSlice";
 import type { Point, Popup } from "../data";
 import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
 import { CreatePointModal } from "./CreatePointModal";
 import { openModal } from "../store/modalSlice";
 import { popupsApi } from "../api/popupsApi";
+import {
+  openPolygonEditor,
+  openPolygonModal,
+  type PolygonModalStates,
+} from "../store/polygonModalSlice";
+import CreatePolygonModal from "./CraetePolygonModal";
+import type { RootState } from "../store";
 
 export interface Polygon {
   id: string;
@@ -93,6 +100,20 @@ export default function ZoomPanMap({
       el.style.width = `32px`;
       el.style.height = `32px`;
     }
+
+    // --- НОВОЕ: фиксированный экранный радиус временных точек полигона ---
+    // мы хотим, чтобы временные точки выглядели как попапы — фиксированный размер в px
+    // desiredScreenRadius задаёт радиус в пикселях на экране (16px -> диаметр 32px как у попапов)
+    const desiredScreenRadius = 16;
+    const tempCircles = mapEl.querySelectorAll('circle[data-temp="1"]');
+    const rSvg = desiredScreenRadius / s; // радиус в координатах SVG, чтобы на экране было fixed px
+    const strokeScreen = 1.5; // желаемая толщина обводки в px на экране
+    const strokeSvg = strokeScreen / s;
+    tempCircles.forEach((c) => {
+      // SVGCircleElement attributes
+      (c as SVGCircleElement).setAttribute("r", String(rSvg));
+      (c as SVGCircleElement).setAttribute("stroke-width", String(strokeSvg));
+    });
   };
 
   // --- drag / zoom ---
@@ -101,10 +122,10 @@ export default function ZoomPanMap({
     if (!el) return;
 
     let isDragging = false;
+    let isMoved = false;
     let last = { x: 0, y: 0 };
 
     const onWheel = (e: WheelEvent) => {
-      // если событие с Ctrl/Meta — можно позволить браузеру (например zoom страницы), но тут перехватываем всегда
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const cx = e.clientX - rect.left;
@@ -122,7 +143,6 @@ export default function ZoomPanMap({
     };
 
     const onPointerDown = (e: PointerEvent) => {
-      // не начинаем драга если клик по попапу / полигону
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -133,6 +153,7 @@ export default function ZoomPanMap({
       }
       if (e.button !== 0) return;
       isDragging = true;
+      isMoved = false;
       last = { x: e.clientX, y: e.clientY };
     };
 
@@ -140,13 +161,31 @@ export default function ZoomPanMap({
       if (!isDragging) return;
       const dx = e.clientX - last.x;
       const dy = e.clientY - last.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        isMoved = true;
+      }
       last = { x: e.clientX, y: e.clientY };
       translateRef.current.x += dx;
       translateRef.current.y += dy;
       requestAnimationFrame(applyTransform);
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (event: PointerEvent) => {
+      if (isDragging && !isMoved) {
+        const el = containerRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const scale = scaleRef.current;
+          const translate = translateRef.current;
+          const x = Math.round(
+            (event.clientX - rect.left - translate.x) / scale
+          );
+          const y = Math.round(
+            (event.clientY - rect.top - translate.y) / scale
+          );
+          addPoint({ x, y });
+        }
+      }
       isDragging = false;
     };
 
@@ -155,7 +194,6 @@ export default function ZoomPanMap({
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
 
-    // initial transform
     requestAnimationFrame(applyTransform);
 
     return () => {
@@ -197,7 +235,25 @@ export default function ZoomPanMap({
 
   const menuItems: ContextMenuItem[] = [
     { label: "Создать точку...", onClick: () => dispatch(openModal()) },
+    {
+      label: "Создать полигон...",
+      onClick: () => dispatch(openPolygonModal()),
+    },
   ];
+
+  // --- добавление полигона
+  const [polygonPoints, setPolygonPoints] = useState<Point[]>([]);
+
+  const addPoint = (point: Point) => {
+    setPolygonPoints((prev) => [...prev, point]);
+  };
+  const removePoint = (index: number) => {
+    setPolygonPoints(polygonPoints.filter((_, i) => i !== index));
+  };
+
+  const polygonModalState: PolygonModalStates = useSelector(
+    (state: RootState) => state.polygonModal.state
+  );
 
   // --- выбор попапа ---
   const [menuData, setMenuData] = useState<MenuData | null>(null);
@@ -227,6 +283,7 @@ export default function ZoomPanMap({
         onClose={handleClose}
       />
       <CreatePointModal position={position} pushPopup={pushPopup} />
+      <CreatePolygonModal />
 
       {/* Панель информации */}
       <Box
@@ -314,6 +371,39 @@ export default function ZoomPanMap({
                 />
               );
             })}
+
+            {/* Отрисовка временного полигона из точек */}
+            {polygonPoints.length > 1 && (
+              <path
+                d={
+                  polygonPoints
+                    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`)
+                    .join(" ") + " Z"
+                }
+                fill="rgba(0,255,0,0.25)"
+                stroke="limegreen"
+                strokeWidth={2}
+              />
+            )}
+
+            {/* Отрисовка точек (временно) */}
+            {polygonPoints.map((p, i) => (
+              <circle
+                key={i}
+                cx={p.x}
+                cy={p.y}
+                r={8} // initial value — будет подправлен в applyTransform для фиксированного экранного размера
+                data-temp="1" // помечаем чтобы можно было менять r в DOM без ререндера
+                fill="yellow"
+                stroke="black"
+                strokeWidth={1.5}
+                style={{ cursor: "pointer", pointerEvents: "auto" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removePoint(i);
+                }}
+              />
+            ))}
           </svg>
         </Box>
 

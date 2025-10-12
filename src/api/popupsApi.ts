@@ -45,7 +45,6 @@ export const popupsApi = {
   // Получаем все попапы из базы
   getAll: async (): Promise<Popup[]> => {
     const res = await axios.get<PopupData[]>(BASE_URL);
-    console.log(res.data.map(fromPopupData));
     return res.data.map(fromPopupData);
   },
 
