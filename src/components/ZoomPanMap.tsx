@@ -140,8 +140,8 @@ export default function ZoomPanMap({
             .join(" ") + " Z";
         pathEl.setAttribute("d", d);
         // fill и stroke оставляем так, чтобы выглядеть стабильно на экране
-        pathEl.setAttribute("fill", poly.color || "rgba(0,0,255,0.3)");
-        pathEl.setAttribute("stroke", poly.strokeColor || "blue");
+        // pathEl.setAttribute("fill", poly.color || "rgba(0,0,255,0.3)");
+        // pathEl.setAttribute("stroke", poly.strokeColor || "blue");
         // толщина обводки в пикселях — не зависит от scale, поэтому просто 2
         pathEl.setAttribute("stroke-width", String(2));
         pathEl.style.pointerEvents =
@@ -445,20 +445,25 @@ export default function ZoomPanMap({
                 key={polygon.id}
                 id={`polygon-${polygon.id}`}
                 d={""}
-                // initial атрибуты; final значения ставит applyTransform
-                fill={polygon.color || "rgba(0,0,255,0.3)"}
-                stroke={polygon.strokeColor || "blue"}
+                fill="transparent"
+                stroke="transparent"
                 strokeWidth={2}
                 style={{
                   pointerEvents: polygonModalState === "edit" ? "none" : "auto",
                   cursor: "pointer",
+                  transition: "stroke 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.fill = "rgba(255, 255, 255, 0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.stroke = "transparent";
+                  e.currentTarget.style.fill = "transparent";
                 }}
                 onClick={(e) => {
-                  // Открывать только если не было drag-а
                   if (!isMovedRef.current) {
                     e.stopPropagation();
                     console.log(`Клик по полигону: ${polygon.title}`);
-                    // dispatch(openPolygonEditor(polygon.id));
                   }
                 }}
               />
