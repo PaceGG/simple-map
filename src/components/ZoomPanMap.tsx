@@ -245,12 +245,8 @@ export default function ZoomPanMap({
             const rect = el.getBoundingClientRect();
             const scale = scaleRef.current;
             const translate = translateRef.current;
-            const x = Math.round(
-              (event.clientX - rect.left - translate.x) / scale
-            );
-            const y = Math.round(
-              (event.clientY - rect.top - translate.y) / scale
-            );
+            const x = (event.clientX - rect.left - translate.x) / scale;
+            const y = (event.clientY - rect.top - translate.y) / scale;
             addPoint({ x, y });
           }
         }
@@ -296,8 +292,8 @@ export default function ZoomPanMap({
       const rect = el.getBoundingClientRect();
       const scale = scaleRef.current;
       const translate = translateRef.current;
-      const x = Math.round((event.clientX - rect.left - translate.x) / scale);
-      const y = Math.round((event.clientY - rect.top - translate.y) / scale);
+      const x = (event.clientX - rect.left - translate.x) / scale;
+      const y = (event.clientY - rect.top - translate.y) / scale;
       setPosition({ x, y });
     }
     setAnchorPosition({ top: event.clientY, left: event.clientX });
