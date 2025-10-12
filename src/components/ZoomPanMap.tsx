@@ -26,10 +26,10 @@ interface ZoomPanMapProps {
 }
 
 export default function ZoomPanMap({
-  backgroundUrl = "map.png",
-  minScale = 0.5,
+  backgroundUrl = "gtav.png",
+  minScale = 0.03,
   maxScale = 400,
-  initialScale = 1,
+  initialScale = 0.03,
   sx = {},
 }: ZoomPanMapProps) {
   const dispatch = useDispatch();
@@ -78,8 +78,81 @@ export default function ZoomPanMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapLayerRef = useRef<HTMLDivElement | null>(null);
   const popupLayerRef = useRef<HTMLDivElement | null>(null);
-  const translateRef = useRef<Point>({ x: 0, y: 0 });
+  const translateRef = useRef<Point>({ x: 620, y: 42 });
   const scaleRef = useRef<number>(initialScale);
+  const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = bgCanvasRef.current;
+    if (!canvas) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = backgroundUrl;
+
+    let cancelled = false;
+    const MAX_INTERNAL = 8192;
+
+    const draw = () => {
+      if (cancelled) return;
+      const imgW = img.naturalWidth || 1600;
+      const imgH = img.naturalHeight || 1200;
+      const logicalW = imgW;
+      const logicalH = imgH;
+
+      const dpr = window.devicePixelRatio || 1;
+
+      const scaleDown = Math.min(
+        1,
+        MAX_INTERNAL / Math.max(logicalW, logicalH)
+      );
+
+      canvas.style.width = `${logicalW}px`;
+      canvas.style.height = `${logicalH}px`;
+      canvas.style.display = "block";
+      canvas.style.pointerEvents = "none";
+      canvas.style.userSelect = "none";
+
+      // внутреннее разрешение буфера (в пикселях)
+      canvas.width = Math.max(1, Math.round(logicalW * scaleDown * dpr));
+      canvas.height = Math.max(1, Math.round(logicalH * scaleDown * dpr));
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // масштабируем контекст так, чтобы мы могли рисовать в LOGICAL координатах:
+      // transformScale = dpr * scaleDown
+      const transformScale = dpr * scaleDown;
+      ctx.setTransform(transformScale, 0, 0, transformScale, 0, 0);
+
+      // Очищаем и рисуем картинку на логических координатах
+      ctx.clearRect(0, 0, logicalW, logicalH);
+      // drawImage с размерами logicalW × logicalH — transform позаботится о персеверной
+      ctx.drawImage(img, 0, 0, logicalW, logicalH);
+    };
+
+    if (img.complete && img.naturalWidth) {
+      draw();
+    } else {
+      img.onload = draw;
+      img.onerror = () => {
+        console.warn("Не удалось загрузить фон:", backgroundUrl);
+        // можно отрисовать заливку или плейсхолдер
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#333";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      };
+    }
+
+    // опционально: если backgroundUrl изменится — повторно отрисуем
+    return () => {
+      cancelled = true;
+    };
+  }, [backgroundUrl]);
 
   const clamp = (v: number, a: number, b: number) =>
     Math.max(a, Math.min(b, v));
@@ -425,18 +498,18 @@ export default function ZoomPanMap({
           }}
         >
           {/* Фон карты */}
-          <Box
-            sx={{
+          <canvas
+            ref={bgCanvasRef}
+            aria-hidden
+            style={{
               position: "relative",
               width: 1600,
               height: 1200,
-              backgroundImage: `url(${backgroundUrl})`,
-              backgroundSize: "contain",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
+              display: "block",
+              pointerEvents: "none", // фон не мешает кликам
+              userSelect: "none",
             }}
           />
-          {/* ПОЛИГОНОВ БОЛЬШЕ НЕТ ЗДЕСЬ — они рисуются в non-scaled оверле */}
         </Box>
 
         {/* Слой попапов и временных точек — НЕ масштабируется */}
