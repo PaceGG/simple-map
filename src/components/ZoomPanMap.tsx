@@ -130,13 +130,13 @@ export default function ZoomPanMap({
   );
 
   // --- drag / zoom ---
+  const isDraggingRef = useRef(false);
+  const isMovedRef = useRef(false);
+  const lastRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
-    let isDragging = false;
-    let isMoved = false;
-    let last = { x: 0, y: 0 };
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -156,35 +156,32 @@ export default function ZoomPanMap({
     };
 
     const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        target.closest &&
-        (target.closest('[data-popup="1"]') || target.closest("svg"))
-      ) {
-        return;
-      }
-      if (e.button !== 0) return;
-      isDragging = true;
-      isMoved = false;
-      last = { x: e.clientX, y: e.clientY };
+      if (e.button !== 0) return; // только левая кнопка
+      isDraggingRef.current = true;
+      isMovedRef.current = false; // сбрасываем флаг перемещения при начале нового действия
+      lastRef.current = { x: e.clientX, y: e.clientY };
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (!isDragging) return;
-      const dx = e.clientX - last.x;
-      const dy = e.clientY - last.y;
+      if (!isDraggingRef.current) return;
+      const dx = e.clientX - lastRef.current.x;
+      const dy = e.clientY - lastRef.current.y;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        isMoved = true;
+        isMovedRef.current = true;
       }
-      last = { x: e.clientX, y: e.clientY };
+      lastRef.current = { x: e.clientX, y: e.clientY };
       translateRef.current.x += dx;
       translateRef.current.y += dy;
       requestAnimationFrame(applyTransform);
     };
 
     const onPointerUp = (event: PointerEvent) => {
-      if (isDragging && !isMoved && polygonModalState === "edit") {
+      // Добавление точки — только если был "клик" (не движение) и режим "edit"
+      if (
+        isDraggingRef.current &&
+        !isMovedRef.current &&
+        polygonModalState === "edit"
+      ) {
         const el = containerRef.current;
         const target = event.target as HTMLElement | null;
         if (
@@ -209,7 +206,10 @@ export default function ZoomPanMap({
           }
         }
       }
-      isDragging = false;
+
+      isDraggingRef.current = false;
+      // НЕ обнуляем isMovedRef.current здесь — нужно, чтобы onClick мог узнать, было ли движение.
+      // isMovedRef будет сброшен при следующем onPointerDown.
     };
 
     el.addEventListener("wheel", onWheel, { passive: false });
@@ -397,13 +397,18 @@ export default function ZoomPanMap({
                       polygonModalState === "edit" ? "none" : "auto",
                     cursor: "pointer",
                   }}
-                  onClick={() =>
-                    console.log(`Клик по полигону: ${polygon.title}`)
-                  }
+                  onClick={(e) => {
+                    // Открывать только если не было drag-а
+                    if (!isMovedRef.current) {
+                      e.stopPropagation();
+                      console.log(`Клик по полигону: ${polygon.title}`);
+                      // если нужно — открыть редактор:
+                      // dispatch(openPolygonEditor(polygon.id));
+                    }
+                  }}
                 />
               );
             })}
-
             {/* Отрисовка временного полигона из точек */}
             {polygonPoints.length > 1 && (
               <path
@@ -439,7 +444,13 @@ export default function ZoomPanMap({
               id={`popup-${popup.id}`}
               key={popup.id}
               data-popup="1"
-              onClick={() => selectPopup(popup)}
+              onClick={(e) => {
+                // если было перемещение — не открываем меню
+                if (!isMovedRef.current) {
+                  e.stopPropagation();
+                  selectPopup(popup);
+                }
+              }}
               sx={{
                 position: "absolute",
                 left: 0,
