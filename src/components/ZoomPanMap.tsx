@@ -279,6 +279,9 @@ export default function ZoomPanMap({
   const removePoint = (index: number) => {
     setPolygonPoints((prev) => prev.filter((_, i) => i !== index));
   };
+  const clearPoints = () => {
+    setPolygonPoints([]);
+  };
 
   // --- выбор попапа ---
   const [menuData, setMenuData] = useState<MenuData | null>(null);
@@ -308,7 +311,7 @@ export default function ZoomPanMap({
         onClose={handleClose}
       />
       <CreatePointModal position={position} pushPopup={pushPopup} />
-      <CreatePolygonModal points={polygonPoints} />
+      <CreatePolygonModal points={polygonPoints} onClose={clearPoints} />
 
       {/* Панель информации */}
       <Box

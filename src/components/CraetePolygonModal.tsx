@@ -21,9 +21,13 @@ import { polygonsApi } from "../api/polygonsApi";
 
 interface CreatePointModalProps {
   points: Point[];
+  onClose: () => void;
 }
 
-export default function CreatePolygonModal({ points }: CreatePointModalProps) {
+export default function CreatePolygonModal({
+  points,
+  onClose,
+}: CreatePointModalProps) {
   const state: PolygonModalStates = useSelector(
     (state: RootState) => state.polygonModal.state
   );
@@ -32,7 +36,10 @@ export default function CreatePolygonModal({ points }: CreatePointModalProps) {
   const [address, setAddress] = useState("");
 
   const openModal = () => dispatch(openPolygonModal());
-  const handleClose = () => dispatch(closePolygonModal());
+  const handleClose = () => {
+    onClose();
+    dispatch(closePolygonModal());
+  };
   const handleEditorMode = () => dispatch(openPolygonEditor());
 
   const handleEditor = () => {
