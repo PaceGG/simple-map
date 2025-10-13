@@ -263,7 +263,7 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
               <TextField {...params} label="Организация" required fullWidth />
             )}
             value={selectedOrganization}
-            onChange={(event, newValue) => {
+            onChange={(_, newValue) => {
               setSelectedOrganization(newValue);
             }}
           />

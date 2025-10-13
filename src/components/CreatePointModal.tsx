@@ -189,7 +189,7 @@ export const CreatePointModal = ({
             <TextField {...params} label="Организация" required fullWidth />
           )}
           value={selectedOrganization}
-          onChange={(event, newValue) => setSelectedOrganization(newValue)}
+          onChange={(_, newValue) => setSelectedOrganization(newValue)}
         />
 
         {/* 🔹 Отображение информации об организации */}

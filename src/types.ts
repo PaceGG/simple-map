@@ -1,7 +1,3 @@
-// import { Organization, PopupType } from "./data";
-// export type PopupTypeKey = (typeof PopupType)[keyof typeof PopupType];
-// export type OrganizationKey = (typeof Organization)[keyof typeof Organization];
-
 export type Point = {
   x: number;
   y: number;

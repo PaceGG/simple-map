@@ -404,7 +404,7 @@ export default function ZoomPanMap({
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [minScale, maxScale, polygonModalState, companyModalState]);
+  }, [minScale, maxScale, polygonModalState, companyModalState, dispatch]);
 
   // При изменении popups — обновляем реф и позиции
   useEffect(() => {
@@ -725,7 +725,7 @@ export default function ZoomPanMap({
           ))}
 
           {/* Временные точки полигона — позиционирование делает applyTransform по id */}
-          {polygonPoints.map((p, i) => (
+          {polygonPoints.map((_, i) => (
             <img
               id={`temp-${i}`}
               key={i}
