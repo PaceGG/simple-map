@@ -6,7 +6,7 @@ import { popupsApi } from "../api/popupsApi";
 import { polygonsApi } from "../api/polygonsApi";
 import { CreateCompanyModal } from "./CreateCompanyModal";
 import { openCompanyModal } from "../store/companyModalSlice";
-import type { Popup } from "../types";
+import type { Polygon, Popup } from "../types";
 import { startMoving } from "../store/movePopupSlice";
 import { MovePopupModal } from "./MovePopupModal";
 
@@ -18,6 +18,7 @@ export type MenuData = {
   logoSrc: string;
   dataType: "popup" | "polygon";
   companies?: Popup[];
+  polygonInfo?: Omit<Polygon, "companies">;
 } | null;
 
 interface SideMenuProps {
@@ -86,6 +87,9 @@ export default function SideMenu({
               <Typography typography="p">{data.id}</Typography>
               <Typography typography="h4">{data.title}</Typography>
               <Typography typography="h7">{data.type}</Typography>
+              <Typography typography="p">
+                {data.polygonInfo?.houseNumber}
+              </Typography>
               {data.dataType === "polygon" && (
                 <>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

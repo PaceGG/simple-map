@@ -28,7 +28,14 @@ export const polygonsApi = {
 
   getAllPopups: async (): Promise<Popup[]> => {
     const polygons = await polygonsApi.getAll();
-    return polygons.flatMap((p) => p.companies);
+    return polygons.flatMap((p) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { companies, ...polygonInfo } = p;
+      return p.companies.map((co) => ({
+        ...co,
+        polygonInfo,
+      }));
+    });
   },
 
   create: async (polygon: Polygon): Promise<Polygon> => {

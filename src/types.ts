@@ -14,6 +14,7 @@ export type Popup = {
   image: string; // base64
   organization: OrganizationKey;
   type: PopupTypeKey;
+  polygonInfo?: Omit<Polygon, "companies">;
 };
 
 export type PopupData = {

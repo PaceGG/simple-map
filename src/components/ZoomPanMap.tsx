@@ -483,6 +483,7 @@ export default function ZoomPanMap({
       // logoSrc: popup.organization.logo,
       logoSrc: "",
       dataType: "popup",
+      polygonInfo: popup.polygonInfo,
     };
     setSelectedPolygon("");
     setMenuData(newMenuData);
