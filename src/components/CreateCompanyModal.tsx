@@ -8,6 +8,7 @@ import {
   Autocomplete,
   FormHelperText,
   Paper,
+  InputAdornment,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,7 +41,11 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([]);
   const [selectedOrganization, setSelectedOrganization] =
     useState<OrganizationInfo | null>(null);
-  const [image, setImage] = useState<File | null>(null);
+
+  // 🔹 Состояния для изображения
+  const [imageSource, setImageSource] = useState<string>("");
+  const [imageDisplayName, setImageDisplayName] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
 
   // 🔹 Загрузка организаций
@@ -56,10 +61,45 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
     fetchOrganizations();
   }, []);
 
-  const handleFileChange = (fileList: FileList | null) => {
-    const file = fileList?.[0] || null;
-    setImage(file);
-    if (file) setImageError("");
+  // 🔹 Вставка изображения из буфера
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      if (!event.clipboardData) return;
+      const items = event.clipboardData.items;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            fileToBase64(file).then((base64) => {
+              setImageSource(base64);
+              setImageFile(file);
+              setImageDisplayName("Вставленное изображение");
+              setImageError("");
+            });
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
+
+  const handleFileChange = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    const base64 = await fileToBase64(file);
+    setImageSource(base64);
+    setImageFile(file);
+    setImageDisplayName(file.name);
+    setImageError("");
+  };
+
+  const handleTextChange = (value: string) => {
+    setImageDisplayName(value);
+    setImageSource(value);
+    setImageFile(null);
+    setImageError("");
   };
 
   const handleClose = () => dispatch(closeCompanyModal());
@@ -73,7 +113,9 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
     setSelectedOrganization(null);
     dispatch(setCompanyPoint(null));
     setCompanyPositionError("");
-    setImage(null);
+    setImageSource("");
+    setImageDisplayName("");
+    setImageFile(null);
     setImageError("");
   };
 
@@ -95,16 +137,18 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
       return;
     }
 
-    if (!image) {
-      setImageError("Выберите изображение");
+    let finalImage = imageSource;
+    if (!finalImage && imageFile) {
+      finalImage = await fileToBase64(imageFile);
+    }
+    if (!finalImage) {
+      setImageError("Укажите, вставьте или загрузите изображение");
       return;
     } else setImageError("");
 
-    const base64 = await fileToBase64(image);
-
     const data: Popup = {
       id: `${Date.now()}`,
-      image: base64,
+      image: finalImage,
       organization: selectedOrganization,
       position: companyPosition,
     };
@@ -200,7 +244,18 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
             options={organizations}
             getOptionLabel={(option) => option.name}
             renderOption={(props, option) => (
-              <li {...props} key={option.name}>
+              <li
+                {...props}
+                key={option.name}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
+                {option.icon && (
+                  <img
+                    src={option.icon}
+                    alt={option.name}
+                    style={{ width: 24, height: 24, borderRadius: 4 }}
+                  />
+                )}
                 {option.name}
               </li>
             )}
@@ -237,23 +292,58 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
             </Box>
           )}
 
-          {/* 🔹 Загрузка изображения */}
-          <Box>
-            <Button variant="outlined" component="label" fullWidth>
-              {image ? image.name : "Загрузить изображение"}
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => handleFileChange(e.target.files)}
+          {/* 🔹 Поле URL / имени файла / вставленного изображения */}
+          <TextField
+            label="Ссылка или изображение"
+            placeholder="URL, изображение или выберите файл"
+            fullWidth
+            value={imageDisplayName}
+            onChange={(e) => handleTextChange(e.target.value.trim())}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Button component="label" variant="outlined">
+                    Загрузить
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => handleFileChange(e.target.files)}
+                    />
+                  </Button>
+                </InputAdornment>
+              ),
+            }}
+            error={!!imageError}
+            helperText={
+              imageError ||
+              "Можно вставить ссылку, изображение или загрузить файл"
+            }
+          />
+
+          {/* 🔹 Превью изображения */}
+          {imageSource && (
+            <Box
+              mt={1}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                maxHeight: 180,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={imageSource}
+                alt="preview"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 180,
+                  borderRadius: 4,
+                  objectFit: "contain",
+                }}
               />
-            </Button>
-            {imageError && (
-              <FormHelperText error sx={{ ml: 1 }}>
-                {imageError}
-              </FormHelperText>
-            )}
-          </Box>
+            </Box>
+          )}
 
           {/* 🔹 Кнопки */}
           <Stack direction="row" justifyContent="space-between">

@@ -170,7 +170,18 @@ export const CreatePointModal = ({
           options={organizations}
           getOptionLabel={(option) => option.name}
           renderOption={(props, option) => (
-            <li {...props} key={option.name}>
+            <li
+              {...props}
+              key={option.name}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              {option.icon && (
+                <img
+                  src={option.icon}
+                  alt={option.name}
+                  style={{ width: 24, height: 24, borderRadius: 4 }}
+                />
+              )}
               {option.name}
             </li>
           )}
@@ -178,9 +189,7 @@ export const CreatePointModal = ({
             <TextField {...params} label="Организация" required fullWidth />
           )}
           value={selectedOrganization}
-          onChange={(event, newValue) => {
-            setSelectedOrganization(newValue);
-          }}
+          onChange={(event, newValue) => setSelectedOrganization(newValue)}
         />
 
         {/* 🔹 Отображение информации об организации */}
