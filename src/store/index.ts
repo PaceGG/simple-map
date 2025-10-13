@@ -4,6 +4,7 @@ import modalReducer from "./modalSlice";
 import polygonModalReducer from "./polygonModalSlice";
 import companyModalReducer from "./companyModalSlice";
 import movePopupReducer from "./movePopupSlice";
+import organizationModalReducer from "./organizationModalSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     polygonModal: polygonModalReducer,
     companyModal: companyModalReducer,
     movePopup: movePopupReducer,
+    organizationModal: organizationModalReducer,
   },
 });
 

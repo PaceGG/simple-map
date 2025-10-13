@@ -9,6 +9,8 @@ import { openCompanyModal } from "../store/companyModalSlice";
 import type { Polygon, Popup } from "../types";
 import { startMoving } from "../store/movePopupSlice";
 import { MovePopupModal } from "./MovePopupModal";
+import { openOrganizationModal } from "../store/organizationModalSlice";
+import { CreateOrganizationModal } from "./CreateOrganizationModal";
 
 export type MenuData = {
   id: string;
@@ -60,6 +62,13 @@ export default function SideMenu({
           flexDirection="column"
           sx={{ pointerEvents: "all" }}
         >
+          <Button
+            variant="outlined"
+            onClick={() => dispatch(openOrganizationModal())}
+          >
+            Добавить организацию
+          </Button>
+          <CreateOrganizationModal />
           {data && (
             <>
               <Box sx={{ position: "relative" }}>
