@@ -21,7 +21,6 @@ export type PopupData = {
   position: Point;
   image: string; // base64
   organization: keyof typeof Organization;
-  type: keyof typeof PopupType;
 };
 
 export type Polygon = {

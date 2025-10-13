@@ -12,25 +12,25 @@ export function toPopupData(popup: Popup): PopupData {
       Organization[key as keyof typeof Organization] === popup.organization
   ) as keyof typeof Organization;
 
-  const typeKey = Object.keys(PopupType).find(
-    (key) => PopupType[key as keyof typeof PopupType] === popup.type
-  ) as keyof typeof PopupType;
-
   return {
     id: popup.id,
     position: popup.position,
     image: popup.image,
     organization: organizationKey,
-    type: typeKey,
   };
 }
 
 // Конвертация PopupData → Popup (для использования в коде)
 export function fromPopupData(data: PopupData): Popup {
+  const organization = Organization[data.organization]; // объект организации
+  const type = PopupType[organization.type]; // объект PopupType
+
   return {
-    ...data,
-    organization: Organization[data.organization],
-    type: PopupType[data.type],
+    id: data.id,
+    position: data.position,
+    image: data.image,
+    organization,
+    type,
   };
 }
 
