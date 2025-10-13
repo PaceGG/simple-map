@@ -14,7 +14,10 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import { organizationsApi } from "../api/organizationsApi";
 import { fileToBase64 } from "../utils";
-import { closeOrganizationModal } from "../store/organizationModalSlice";
+import {
+  addNewOrg,
+  closeOrganizationModal,
+} from "../store/organizationModalSlice";
 import type { OrganizationInfo } from "../types";
 
 interface TypeOption {
@@ -124,7 +127,8 @@ export const CreateOrganizationModal = () => {
       icon: iconSource,
     };
 
-    await organizationsApi.create(newOrg);
+    const response = await organizationsApi.create(newOrg);
+    dispatch(addNewOrg(response));
     clearFields();
     handleClose();
   };

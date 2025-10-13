@@ -32,6 +32,10 @@ export const CreatePointModal = ({
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([]);
   const [selectedOrganization, setSelectedOrganization] =
     useState<OrganizationInfo | null>(null);
+  const newOrg = useSelector((s: RootState) => s.organizationModal.newOrg);
+  useEffect(() => {
+    if (newOrg) setOrganizations((prev) => [...prev, newOrg]);
+  }, [newOrg]);
 
   const [imageSource, setImageSource] = useState<string>("");
   const [imageDisplayName, setImageDisplayName] = useState<string>("");
