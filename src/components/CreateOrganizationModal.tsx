@@ -6,6 +6,8 @@ import {
   Typography,
   Stack,
   InputAdornment,
+  Autocomplete,
+  Avatar,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +17,11 @@ import { fileToBase64 } from "../utils";
 import { closeOrganizationModal } from "../store/organizationModalSlice";
 import type { OrganizationInfo } from "../types";
 
+interface TypeOption {
+  label: string;
+  icon: string;
+}
+
 export const CreateOrganizationModal = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isOpen = useSelector(
@@ -22,11 +29,30 @@ export const CreateOrganizationModal = () => {
   );
 
   const [name, setName] = useState("");
-  const [type, setType] = useState("");
-
+  const [type, setType] = useState<TypeOption | string>(""); // выбранный тип
+  const [typesList, setTypesList] = useState<TypeOption[]>([]); // список существующих типов с иконками
   const [iconSource, setIconSource] = useState<string>("");
   const [iconDisplayName, setIconDisplayName] = useState<string>("");
   const [iconError, setIconError] = useState("");
+
+  // загрузка существующих типов при открытии модалки
+  useEffect(() => {
+    const fetchTypes = async () => {
+      const orgs = await organizationsApi.getAll();
+      // создаём уникальные типы с иконками
+      const uniqueTypesMap = new Map<string, string>();
+      orgs.forEach((org) => {
+        if (!uniqueTypesMap.has(org.type)) {
+          uniqueTypesMap.set(org.type, org.icon);
+        }
+      });
+      const uniqueTypesArray: TypeOption[] = Array.from(
+        uniqueTypesMap.entries()
+      ).map(([label, icon]) => ({ label, icon }));
+      setTypesList(uniqueTypesArray);
+    };
+    if (isOpen) fetchTypes();
+  }, [isOpen]);
 
   // Вставка изображения из буфера
   useEffect(() => {
@@ -81,20 +107,20 @@ export const CreateOrganizationModal = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (!name.trim() || !type.trim()) {
+    if (!name.trim() || !type) {
       alert("Заполните название и тип организации");
       return;
     }
-
     if (!iconSource) {
       setIconError("Укажите, вставьте или загрузите иконку");
       return;
     }
 
+    const typeValue = typeof type === "string" ? type : type.label;
+
     const newOrg: Omit<OrganizationInfo, "id"> = {
       name: name.trim(),
-      type: type.trim(),
+      type: typeValue.trim(),
       icon: iconSource,
     };
 
@@ -125,7 +151,7 @@ export const CreateOrganizationModal = () => {
       >
         <Typography variant="h5">Создать организацию</Typography>
 
-        {/* Название и тип */}
+        {/* Название */}
         <TextField
           label="Название"
           required
@@ -133,12 +159,68 @@ export const CreateOrganizationModal = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <TextField
-          label="Тип"
-          required
-          fullWidth
+
+        {/* Тип с выбором и вводом */}
+        <Autocomplete
+          freeSolo
+          options={typesList}
+          getOptionLabel={(option) =>
+            typeof option === "string" ? option : option.label
+          }
           value={type}
-          onChange={(e) => setType(e.target.value)}
+          onChange={(_, newValue) => {
+            setType(newValue || "");
+            if (typeof newValue !== "string" && newValue?.icon) {
+              setIconSource(newValue.icon);
+              setIconDisplayName("Иконка из типа");
+              setIconError("");
+            }
+          }}
+          onInputChange={(_, newInputValue, reason) => {
+            // если ввод вручную, очищаем иконку
+            if (reason === "input") {
+              setType(newInputValue);
+              setIconSource("");
+              setIconDisplayName("");
+            }
+          }}
+          renderOption={(props, option) => {
+            const { key, ...rest } = props;
+            return (
+              <Box
+                component="li"
+                {...rest}
+                key={key}
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
+                {"icon" in option && (
+                  <Avatar src={option.icon} sx={{ width: 24, height: 24 }} />
+                )}
+                {typeof option === "string" ? option : option.label}
+              </Box>
+            );
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Тип"
+              required
+              fullWidth
+              placeholder="Выберите существующий или введите новый"
+              InputProps={{
+                ...params.InputProps,
+                startAdornment:
+                  typeof type !== "string" && type.icon ? (
+                    <InputAdornment position="start">
+                      <Avatar
+                        src={type.icon}
+                        sx={{ width: 28, height: 28, mr: 1 }}
+                      />
+                    </InputAdornment>
+                  ) : null,
+              }}
+            />
+          )}
         />
 
         {/* Поле URL / имени файла / вставленной иконки */}
