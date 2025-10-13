@@ -7,6 +7,8 @@ import { polygonsApi } from "../api/polygonsApi";
 import { CreateCompanyModal } from "./CreateCompanyModal";
 import { openCompanyModal } from "../store/companyModalSlice";
 import type { Popup } from "../types";
+import { startMoving } from "../store/movePopupSlice";
+import { MovePopupModal } from "./MovePopupModal";
 
 export type MenuData = {
   id: string;
@@ -31,6 +33,10 @@ export default function SideMenu({
 }: SideMenuProps) {
   const isOpen = useSelector((state: RootState) => state.menu.isOpen);
   const dispatch = useDispatch();
+
+  const popupPolygonSelection = useSelector(
+    (s: RootState) => s.movePopup.selection
+  );
 
   const deletePopup = (id: string) => {
     popupsApi.delete(id);
@@ -100,13 +106,26 @@ export default function SideMenu({
                 </>
               )}
               {data.dataType === "popup" && (
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => deletePopup(data.id)}
-                >
-                  Удалить точку
-                </Button>
+                <>
+                  <Button
+                    variant="outlined"
+                    onClick={() => dispatch(startMoving())}
+                  >
+                    Переместить в полигон
+                  </Button>
+                  <MovePopupModal
+                    isOpen={popupPolygonSelection}
+                    popupId={data.id}
+                  />
+
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => deletePopup(data.id)}
+                  >
+                    Удалить точку
+                  </Button>
+                </>
               )}
               {data.dataType === "polygon" && (
                 <Button

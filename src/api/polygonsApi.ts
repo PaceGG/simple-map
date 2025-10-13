@@ -1,6 +1,6 @@
 import axios from "axios";
 import { type Polygon, type PolygonData, type Popup } from "../types";
-import { fromPopupData, toPopupData } from "./popupsApi";
+import { fromPopupData, popupsApi, toPopupData } from "./popupsApi";
 
 const BASE_URL = "http://localhost:3001/polygons";
 
@@ -55,5 +55,17 @@ export const polygonsApi = {
     );
 
     return fromPolygonData(updateRes.data);
+  },
+
+  movePopup: async (popupId: string, polygonId: string): Promise<Polygon> => {
+    const allPopups = await popupsApi.getAll();
+    const popup = allPopups.find((p) => p.id === popupId);
+    if (!popup) throw new Error("Попап не найден");
+
+    await popupsApi.delete(popupId);
+
+    const updatedPolygon = await polygonsApi.addCompany(polygonId, popup);
+
+    return updatedPolygon;
   },
 };

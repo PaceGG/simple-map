@@ -19,6 +19,7 @@ import {
   setCompanyPoint,
   type CompanyModalStates,
 } from "../store/companyModalSlice";
+import { selectPolygonForMoving } from "../store/movePopupSlice";
 
 interface ZoomPanMapProps {
   backgroundUrl?: string;
@@ -460,6 +461,17 @@ export default function ZoomPanMap({
     setPolygonPoints([]);
   };
 
+  // --- Выбор полигона для добавления в него попапа
+  const selectedPolygonForMoving = useSelector(
+    (s: RootState) => s.movePopup.polygonId
+  );
+  const selectionPolygonForMoving = useSelector(
+    (s: RootState) => s.movePopup.selection
+  );
+
+  const [selectedPolygon, setSelectedPolygon] = useState("");
+  const [polygonHovered, setPolygonHovered] = useState("");
+
   // --- выбор меню ---
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const selectPopup = (popup: Popup) => {
@@ -472,6 +484,7 @@ export default function ZoomPanMap({
       logoSrc: "",
       dataType: "popup",
     };
+    setSelectedPolygon("");
     setMenuData(newMenuData);
     dispatch(openMenu());
   };
@@ -486,6 +499,7 @@ export default function ZoomPanMap({
       dataType: "polygon",
       companies: polygon.companies,
     };
+    setSelectedPolygon(polygon.id);
     setMenuData(newMenuData);
     dispatch(openMenu());
   };
@@ -598,26 +612,38 @@ export default function ZoomPanMap({
                 <path
                   id={`polygon-${polygon.id}`}
                   d={""} // applyTransform обновит
-                  fill="transparent"
+                  fill={
+                    selectedPolygonForMoving === polygon.id
+                      ? "green"
+                      : selectedPolygon === polygon.id
+                      ? "blue"
+                      : polygonHovered === polygon.id
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "transparent"
+                  }
                   stroke="transparent"
                   strokeWidth={2}
                   style={{
                     pointerEvents:
-                      polygonModalState === "edit" ? "none" : "auto",
+                      polygonModalState === "edit" ||
+                      companyModalState === "edit"
+                        ? "none"
+                        : "auto",
                     cursor: "pointer",
                     transition: "stroke 0.2s ease",
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.fill = "rgba(255, 255, 255, 0.1)";
+                  onMouseEnter={() => {
+                    setPolygonHovered(polygon.id);
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.stroke = "transparent";
-                    e.currentTarget.style.fill = "transparent";
+                  onMouseLeave={() => {
+                    setPolygonHovered("");
                   }}
                   onClick={(e) => {
                     if (!isMovedRef.current) {
                       e.stopPropagation();
-                      selectPolygon(polygon);
+                      if (selectionPolygonForMoving)
+                        dispatch(selectPolygonForMoving(polygon.id));
+                      else selectPolygon(polygon);
                     }
                   }}
                 />
