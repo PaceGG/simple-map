@@ -6,7 +6,7 @@ import { popupsApi } from "../api/popupsApi";
 import { polygonsApi } from "../api/polygonsApi";
 import { CreateCompanyModal } from "./CreateCompanyModal";
 import { openCompanyModal } from "../store/companyModalSlice";
-import type { Company } from "../types";
+import type { Popup } from "../types";
 
 export type MenuData = {
   id: string;
@@ -15,7 +15,7 @@ export type MenuData = {
   imgSrc: string;
   logoSrc: string;
   dataType: "popup" | "polygon";
-  companies?: Company[];
+  companies?: Popup[];
 } | null;
 
 interface SideMenuProps {

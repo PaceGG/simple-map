@@ -4,7 +4,6 @@ import {
   TextField,
   Button,
   Typography,
-  FormHelperText,
   Stack,
   Autocomplete,
   InputAdornment,
@@ -16,14 +15,7 @@ import { closeModal } from "../store/modalSlice";
 import { type Popup } from "../types";
 import { PopupType, Organization } from "../data";
 import { popupsApi } from "../api/popupsApi";
-
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+import { fileToBase64 } from "../utils";
 
 interface CreatePointModalProps {
   position: { x: number; y: number } | null;

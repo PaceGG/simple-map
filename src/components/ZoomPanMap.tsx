@@ -15,6 +15,10 @@ import {
 import CreatePolygonModal from "./CraetePolygonModal";
 import type { RootState } from "../store";
 import { polygonsApi } from "../api/polygonsApi";
+import {
+  setCompanyPoint,
+  type CompanyModalStates,
+} from "../store/companyModalSlice";
 
 interface ZoomPanMapProps {
   backgroundUrl?: string;
@@ -184,6 +188,19 @@ export default function ZoomPanMap({
       el.style.height = `32px`;
     }
 
+    // --- Временная точка компании ---
+    const p = companyPointRef.current;
+    if (p) {
+      const dom = document.getElementById("temp-companypoint");
+      if (dom) {
+        const screenX = Math.round(translateRef.current.x + p.x * s - 16);
+        const screenY = Math.round(translateRef.current.y + p.y * s - 16);
+        const el = dom as HTMLElement;
+        el.style.left = `${screenX}px`;
+        el.style.top = `${screenY}px`;
+      }
+    }
+
     // --- Временные точки полигона (HTML элементы) ---
     const tempPoints = polygonPointsRef.current;
     for (let i = 0; i < tempPoints.length; i++) {
@@ -281,6 +298,19 @@ export default function ZoomPanMap({
     (state: RootState) => state.polygonModal.state
   );
 
+  const companyModalState: CompanyModalStates = useSelector(
+    (s: RootState) => s.companyModal.state
+  );
+
+  const companyPoint = useSelector((s: RootState) => s.companyModal.point);
+  const companyPointRef = useRef<Point | null>(null);
+
+  useEffect(() => {
+    if (!companyPoint) return;
+    companyPointRef.current = companyPoint;
+    requestAnimationFrame(applyTransform);
+  }, [companyPoint]);
+
   // --- drag / zoom ---
   const isDraggingRef = useRef(false);
   const isMovedRef = useRef(false);
@@ -318,9 +348,7 @@ export default function ZoomPanMap({
       if (!isDraggingRef.current) return;
       const dx = e.clientX - lastRef.current.x;
       const dy = e.clientY - lastRef.current.y;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        isMovedRef.current = true;
-      }
+      isMovedRef.current = true;
       lastRef.current = { x: e.clientX, y: e.clientY };
       translateRef.current.x += dx;
       translateRef.current.y += dy;
@@ -332,7 +360,7 @@ export default function ZoomPanMap({
       if (
         isDraggingRef.current &&
         !isMovedRef.current &&
-        polygonModalState === "edit"
+        (polygonModalState === "edit" || companyModalState === "edit")
       ) {
         const el = containerRef.current;
         const target = event.target as HTMLElement | null;
@@ -350,7 +378,9 @@ export default function ZoomPanMap({
             const translate = translateRef.current;
             const x = (event.clientX - rect.left - translate.x) / scale;
             const y = (event.clientY - rect.top - translate.y) / scale;
-            addPoint({ x, y });
+            if (polygonModalState === "edit") addPolygonPoint({ x, y });
+            if (companyModalState === "edit")
+              dispatch(setCompanyPoint({ x, y }));
           }
         }
       }
@@ -373,7 +403,7 @@ export default function ZoomPanMap({
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [minScale, maxScale, polygonModalState]);
+  }, [minScale, maxScale, polygonModalState, companyModalState]);
 
   // При изменении popups — обновляем реф и позиции
   useEffect(() => {
@@ -420,7 +450,7 @@ export default function ZoomPanMap({
     requestAnimationFrame(applyTransform);
   }, [polygonPoints]);
 
-  const addPoint = (point: Point) => {
+  const addPolygonPoint = (point: Point) => {
     setPolygonPoints((prev) => [...prev, point]);
   };
   const removePoint = (index: number) => {
@@ -685,6 +715,32 @@ export default function ZoomPanMap({
               onPointerDown={(e) => e.stopPropagation()}
             />
           ))}
+
+          {companyPoint && (
+            <img
+              id={`temp-companypoint`}
+              key={"companypoint"}
+              data-temp="1"
+              src="https://docs-backend.fivem.net/blips/radar_incapacitated.png"
+              alt=""
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: 32,
+                height: 32,
+                cursor: "pointer",
+                pointerEvents: "auto",
+                zIndex: 25,
+                userSelect: "none",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch(setCompanyPoint(null));
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          )}
         </Box>
       </Paper>
     </>

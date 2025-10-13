@@ -1,20 +1,12 @@
 import axios from "axios";
-import { type Popup } from "../types";
+import { type Popup, type PopupData } from "../types";
 import { Organization, PopupType } from "../data";
+import { polygonsApi } from "./polygonsApi";
 
 const BASE_URL = "http://localhost:3001/popups";
 
-// Тип данных, хранящихся в базе
-export type PopupData = {
-  id: string;
-  position: { x: number; y: number };
-  image: string; // base64
-  organization: keyof typeof Organization;
-  type: keyof typeof PopupType;
-};
-
 // Конвертация Popup → PopupData (для отправки в базу)
-function toPopupData(popup: Popup): PopupData {
+export function toPopupData(popup: Popup): PopupData {
   const organizationKey = Object.keys(Organization).find(
     (key) =>
       Organization[key as keyof typeof Organization] === popup.organization
@@ -34,7 +26,7 @@ function toPopupData(popup: Popup): PopupData {
 }
 
 // Конвертация PopupData → Popup (для использования в коде)
-function fromPopupData(data: PopupData): Popup {
+export function fromPopupData(data: PopupData): Popup {
   return {
     ...data,
     organization: Organization[data.organization],
@@ -46,7 +38,13 @@ export const popupsApi = {
   // Получаем все попапы из базы
   getAll: async (): Promise<Popup[]> => {
     const res = await axios.get<PopupData[]>(BASE_URL);
-    return res.data.map(fromPopupData);
+    const dataPopups = res.data.map(fromPopupData);
+
+    const polygonsPopups = await polygonsApi.getAllPopups();
+
+    console.log([...dataPopups, ...polygonsPopups]);
+
+    return [...dataPopups, ...polygonsPopups];
   },
 
   // Создаём новый попап, но отправляем в базу только ключи

@@ -9,7 +9,6 @@ import {
 import {
   Box,
   Button,
-  FormHelperText,
   Modal,
   Paper,
   Stack,
@@ -19,7 +18,8 @@ import {
 } from "@mui/material";
 import { useState, useEffect, type FormEvent } from "react";
 import type { Point, Polygon } from "../types";
-import { fileToBase64, polygonsApi } from "../api/polygonsApi";
+import { polygonsApi } from "../api/polygonsApi";
+import { fileToBase64 } from "../utils";
 
 interface CreatePointModalProps {
   points: Point[];
