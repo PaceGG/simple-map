@@ -24,5 +24,8 @@ dist-ssr
 *.sw?
 
 db.json
+db_AC.json
+
+data_AC.ts
 
 *.psd

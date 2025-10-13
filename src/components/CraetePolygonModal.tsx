@@ -15,8 +15,9 @@ import {
   Stack,
   TextField,
   Typography,
+  InputAdornment,
 } from "@mui/material";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import type { Point, Polygon } from "../types";
 import { fileToBase64, polygonsApi } from "../api/polygonsApi";
 
@@ -37,14 +38,13 @@ export default function CreatePolygonModal({
   const dispatch = useDispatch<AppDispatch>();
 
   const [address, setAddress] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [imageError, setImageError] = useState("");
+  const [houseNumber, setHouseNumber] = useState("");
 
-  const handleFileChange = (fileList: FileList | null) => {
-    const file = fileList?.[0] || null;
-    setImage(file);
-    if (file) setImageError("");
-  };
+  // 🔹 Источник изображения (URL, вставка или base64)
+  const [imageSource, setImageSource] = useState<string>("");
+  const [imageDisplayName, setImageDisplayName] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageError, setImageError] = useState("");
 
   const openModal = () => dispatch(openPolygonModal());
   const handleClose = () => {
@@ -52,33 +52,71 @@ export default function CreatePolygonModal({
     dispatch(closePolygonModal());
   };
   const handleEditorMode = () => dispatch(openPolygonEditor());
+  const handleEditor = () => handleEditorMode();
+  const handleAddPoints = () => openModal();
 
-  const handleEditor = () => {
-    console.log("добавление точек");
-    handleEditorMode();
+  // 🔹 обработка выбора файла
+  const handleFileChange = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    const base64 = await fileToBase64(file);
+    setImageSource(base64);
+    setImageFile(file);
+    setImageDisplayName(file.name);
+    setImageError("");
   };
 
-  const handleAddPoints = () => {
-    console.log("добавить точки");
-    openModal();
+  // 🔹 вставка изображения из буфера обмена
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      if (!event.clipboardData) return;
+      const items = event.clipboardData.items;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            fileToBase64(file).then((base64) => {
+              setImageSource(base64);
+              setImageFile(file);
+              setImageDisplayName("Вставленное изображение");
+              setImageError("");
+            });
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
+
+  // 🔹 ручной ввод ссылки
+  const handleTextChange = (value: string) => {
+    setImageDisplayName(value);
+    setImageSource(value);
+    setImageFile(null);
+    setImageError("");
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!image) {
-      setImageError("Выберите изображение");
-      return;
+    let finalImage = imageSource;
+    if (!finalImage && imageFile) {
+      finalImage = await fileToBase64(imageFile);
     }
 
-    // Конвертируем File в base64
-    const imageBase64 = await fileToBase64(image);
+    if (!finalImage) {
+      setImageError("Укажите, вставьте или загрузите изображение");
+      return;
+    }
 
     const data: Polygon = {
       id: `${Date.now()}`,
       points,
+      houseNumber,
       title: address,
-      image: imageBase64, // сохраняем как base64
+      image: finalImage,
       companies: [],
     };
 
@@ -87,10 +125,7 @@ export default function CreatePolygonModal({
     handleClose();
   };
 
-  const handleCancel = () => {
-    console.log("отмена");
-    handleClose();
-  };
+  const handleCancel = () => handleClose();
 
   return (
     <>
@@ -134,6 +169,7 @@ export default function CreatePolygonModal({
           </Box>
         </Paper>
       )}
+
       <Modal open={state === "visible"}>
         <Box
           component="form"
@@ -142,13 +178,13 @@ export default function CreatePolygonModal({
             position: "absolute",
             top: "50%",
             left: "50%",
-            maxWidth: 350,
+            maxWidth: 400,
             transform: "translate(-50%, -50%)",
             bgcolor: "background.paper",
             p: 4,
             pt: 2.5,
             borderRadius: 2,
-            minWidth: 350,
+            minWidth: 360,
             display: "flex",
             flexDirection: "column",
             gap: 2,
@@ -160,43 +196,88 @@ export default function CreatePolygonModal({
 
           <Typography>
             Точки:{" "}
-            {points.map((p) => {
-              return (
-                <span>
-                  {"{"}
-                  {Math.round(p.x)}; {Math.round(p.y)}
-                  {"}"}
-                </span>
-              );
-            })}
+            {points.map((p, i) => (
+              <span key={i}>
+                {"{"}
+                {Math.round(p.x)}; {Math.round(p.y)}
+                {"} "}
+              </span>
+            ))}
           </Typography>
+
           <Button variant="outlined" onClick={handleEditor}>
             Добавить точки
           </Button>
 
+          <Stack flexDirection={"row"} gap={1}>
+            <TextField
+              required
+              label="№"
+              value={houseNumber}
+              onChange={(e) => setHouseNumber(e.target.value)}
+              sx={{ maxWidth: 80 }}
+            />
+            <TextField
+              required
+              label="Адрес"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              sx={{ flex: 1 }}
+            />
+          </Stack>
+
+          {/* 🔹 Поле для вставки, ссылки или выбора файла */}
           <TextField
-            required
-            label="Адрес"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            label="Ссылка или изображение"
+            placeholder="Вставьте или выберите изображение"
+            fullWidth
+            value={imageDisplayName}
+            onChange={(e) => handleTextChange(e.target.value.trim())}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Button component="label" variant="outlined">
+                    Загрузить
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => handleFileChange(e.target.files)}
+                    />
+                  </Button>
+                </InputAdornment>
+              ),
+            }}
+            error={!!imageError}
+            helperText={
+              imageError ||
+              "Можно вставить из буфера, указать ссылку или выбрать файл"
+            }
           />
 
-          <Box>
-            <Button variant="outlined" component="label" fullWidth>
-              {image ? image.name : "Загрузить изображение"}
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => handleFileChange(e.target.files)}
+          {/* 🔹 Предпросмотр изображения */}
+          {imageSource && (
+            <Box
+              mt={1}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                maxHeight: 180,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={imageSource}
+                alt="preview"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 180,
+                  borderRadius: 4,
+                  objectFit: "contain",
+                }}
               />
-            </Button>
-            {imageError && (
-              <FormHelperText error sx={{ ml: 1 }}>
-                {imageError}
-              </FormHelperText>
-            )}
-          </Box>
+            </Box>
+          )}
 
           <Stack direction="row" justifyContent="space-between">
             <Button type="submit" variant="contained">

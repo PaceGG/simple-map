@@ -1,6 +1,6 @@
 import axios from "axios";
 import { type Popup } from "../types";
-import { Organization, PopupType } from "../data";
+import { Organization, PopupType } from "../data_AC";
 
 const BASE_URL = "http://localhost:3001/popups";
 

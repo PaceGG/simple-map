@@ -1,4 +1,4 @@
-import { Organization, PopupType } from "./data";
+import { Organization, PopupType } from "./data_AC";
 export type PopupTypeKey = (typeof PopupType)[keyof typeof PopupType];
 
 export type OrganizationKey = (typeof Organization)[keyof typeof Organization];
@@ -34,6 +34,7 @@ export type Polygon = {
   id: string;
   points: Point[];
   title: string;
+  houseNumber: string;
   image: string; // base64
   companies: Company[];
 };
