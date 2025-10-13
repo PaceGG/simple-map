@@ -8,6 +8,7 @@ export type Point = {
 };
 
 export interface OrganizationInfo {
+  id: string;
   name: string;
   type: string;
   icon: string;
@@ -25,7 +26,7 @@ export type PopupData = {
   id: string;
   position: Point;
   image: string; // base64
-  organization: OrganizationInfo;
+  organizationId: string;
 };
 
 export type Polygon = {

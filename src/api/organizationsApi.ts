@@ -9,7 +9,7 @@ export const organizationsApi = {
     return response.data;
   },
 
-  async getById(id: number): Promise<OrganizationInfo> {
+  async getById(id: string): Promise<OrganizationInfo> {
     const response = await axios.get(`${BASE_URL}/${id}`);
     return response.data;
   },
