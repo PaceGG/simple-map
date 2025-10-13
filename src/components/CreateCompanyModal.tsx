@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import { type Company } from "../types";
-import { PopupType, Organization } from "../data_AC";
+import { PopupType, Organization } from "../data";
 import { closeCompanyModal } from "../store/companyModalSlice";
 import { fileToBase64, polygonsApi } from "../api/polygonsApi";
 // import { companiesApi } from "../api/companiesApi"; // предполагается, что есть API для компаний

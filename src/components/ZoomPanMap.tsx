@@ -25,10 +25,10 @@ interface ZoomPanMapProps {
 }
 
 export default function ZoomPanMap({
-  backgroundUrl = "gtav.png",
+  backgroundUrl = "map.png",
   minScale = 0.03,
   maxScale = 400,
-  initialScale = 0.03,
+  initialScale = 1,
   sx = {},
 }: ZoomPanMapProps) {
   const dispatch = useDispatch();
