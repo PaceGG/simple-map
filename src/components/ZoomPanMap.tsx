@@ -51,8 +51,10 @@ export default function ZoomPanMap({
     });
   }, []);
 
-  const pushPopup = (newPopup: Popup) =>
+  const pushPopup = (newPopup: Popup) => {
     setPopups((prev) => [...prev, newPopup]);
+    selectPopup(newPopup);
+  };
   const delPopup = (delId: string) => {
     setPopups((prev) => prev.filter((p) => p.id !== delId));
     setMenuData(null);
@@ -72,6 +74,7 @@ export default function ZoomPanMap({
   }, [polygons]);
   const pushPolygon = (newPoly: Polygon) => {
     setPolygons((prev) => [...prev, newPoly]);
+    selectPolygon(newPoly);
   };
   const delPolygon = (delId: string) => {
     setPolygons((prev) => prev.filter((p) => p.id !== delId));
