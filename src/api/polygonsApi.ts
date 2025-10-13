@@ -10,6 +10,7 @@ export type PolygonData = {
   title: string;
   image: string; // base64
   companies: Company[];
+  houseNumber: string;
 };
 
 // 🔹 File → base64
@@ -44,6 +45,7 @@ export async function toPolygonData(polygon: Polygon): Promise<PolygonData> {
     title: polygon.title,
     image: polygon.image || "",
     companies: polygon.companies,
+    houseNumber: polygon.houseNumber,
   };
 }
 
@@ -55,6 +57,7 @@ export function fromPolygonData(data: PolygonData): Polygon {
     title: data.title,
     image: data.image,
     companies: data.companies,
+    houseNumber: data.houseNumber,
   };
 }
 

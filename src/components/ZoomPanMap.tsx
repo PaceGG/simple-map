@@ -208,7 +208,7 @@ export default function ZoomPanMap({
           `#polygon-${poly.id}`
         ) as SVGPathElement | null;
         if (!pathEl) continue;
-        // построим путь в экранных координатах
+
         const d =
           poly.points
             .map((p, i) => {
@@ -218,14 +218,38 @@ export default function ZoomPanMap({
             })
             .join(" ") + " Z";
         pathEl.setAttribute("d", d);
-        // fill и stroke оставляем так, чтобы выглядеть стабильно на экране
-        // pathEl.setAttribute("fill", poly.color || "rgba(0,0,255,0.3)");
-        // pathEl.setAttribute("stroke", poly.strokeColor || "blue");
-        // толщина обводки в пикселях — не зависит от scale, поэтому просто 2
-        pathEl.setAttribute("stroke-width", String(2));
-        pathEl.style.pointerEvents =
-          polygonModalState === "edit" ? "none" : "auto";
-        pathEl.style.cursor = "pointer";
+
+        // --- центр полигона ---
+        const centroid = (() => {
+          let x = 0,
+            y = 0;
+          for (const p of poly.points) {
+            x += p.x;
+            y += p.y;
+          }
+          return {
+            x: Math.round(
+              translateRef.current.x + (x / poly.points.length) * s
+            ),
+            y: Math.round(
+              translateRef.current.y + (y / poly.points.length) * s
+            ),
+          };
+        })();
+
+        const textEl = overlaySvg.querySelector(
+          `#polygon-text-${poly.id}`
+        ) as SVGTextElement | null;
+        if (textEl) {
+          textEl.setAttribute("x", String(centroid.x));
+          textEl.setAttribute("y", String(centroid.y));
+          textEl.setAttribute("font-size", String(s * 7.77));
+          if (s > 0.9) {
+            textEl.style.display = "inline";
+          } else {
+            textEl.style.display = "none";
+          }
+        }
       }
 
       // временный полигон (точки polygonPointsRef)
@@ -540,33 +564,52 @@ export default function ZoomPanMap({
           >
             {/* Полигоны: рендерим path-ы с id, d будет устанавливаться в applyTransform */}
             {polygons.map((polygon) => (
-              <path
-                key={polygon.id}
-                id={`polygon-${polygon.id}`}
-                d={""}
-                fill="transparent"
-                stroke="transparent"
-                strokeWidth={2}
-                style={{
-                  pointerEvents: polygonModalState === "edit" ? "none" : "auto",
-                  cursor: "pointer",
-                  transition: "stroke 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.fill = "rgba(255, 255, 255, 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.stroke = "transparent";
-                  e.currentTarget.style.fill = "transparent";
-                }}
-                onClick={(e) => {
-                  if (!isMovedRef.current) {
-                    e.stopPropagation();
-                    console.log(`Клик по полигону: ${polygon.title}`);
-                    selectPolygon(polygon);
-                  }
-                }}
-              />
+              <g key={polygon.id}>
+                <path
+                  id={`polygon-${polygon.id}`}
+                  d={""} // applyTransform обновит
+                  fill="transparent"
+                  stroke="transparent"
+                  strokeWidth={2}
+                  style={{
+                    pointerEvents:
+                      polygonModalState === "edit" ? "none" : "auto",
+                    cursor: "pointer",
+                    transition: "stroke 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.fill = "rgba(255, 255, 255, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.stroke = "transparent";
+                    e.currentTarget.style.fill = "transparent";
+                  }}
+                  onClick={(e) => {
+                    if (!isMovedRef.current) {
+                      e.stopPropagation();
+                      selectPolygon(polygon);
+                    }
+                  }}
+                />
+                <text
+                  id={`polygon-text-${polygon.id}`}
+                  x={0}
+                  y={0}
+                  textAnchor="middle"
+                  alignmentBaseline="central"
+                  fill="#34495E" // насыщенный серо-синий
+                  stroke="#BDC3C7" // средняя серая обводка
+                  strokeWidth={2}
+                  paintOrder="stroke" // сначала рисуется обводка, потом текст
+                  fontSize={14}
+                  fontWeight="500"
+                  pointerEvents="none"
+                  fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.1)" }}
+                >
+                  {polygon.houseNumber}
+                </text>
+              </g>
             ))}
 
             {/* Временный полигон из polygonPoints (овера). applyTransform обновит d */}
