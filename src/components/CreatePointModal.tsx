@@ -12,10 +12,10 @@ import { useState, useEffect, type FormEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import { closeModal } from "../store/modalSlice";
-import { type Popup } from "../types";
-import { PopupType, Organization } from "../data";
+import type { OrganizationInfo, Popup } from "../types";
 import { popupsApi } from "../api/popupsApi";
 import { fileToBase64 } from "../utils";
+import { organizationsApi } from "../api/organizationsApi";
 
 interface CreatePointModalProps {
   position: { x: number; y: number } | null;
@@ -29,76 +29,30 @@ export const CreatePointModal = ({
   const dispatch = useDispatch<AppDispatch>();
   const isOpen = useSelector((state: RootState) => state.modal.isActive);
 
-  const [organizationKey, setOrganizationKey] =
-    useState<keyof typeof Organization>("CAP");
-  const [typeKey, setTypeKey] = useState<keyof typeof PopupType>("Clothes");
+  const [organizations, setOrganizations] = useState<OrganizationInfo[]>([]);
+  const [selectedOrganization, setSelectedOrganization] =
+    useState<OrganizationInfo | null>(null);
 
-  // 🔹 для хранения фактического источника (URL или base64)
   const [imageSource, setImageSource] = useState<string>("");
-  // 🔹 то, что отображается в поле ввода (URL, имя файла или пусто)
   const [imageDisplayName, setImageDisplayName] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
 
-  const handleClose = () => dispatch(closeModal());
-  const handleCancel = () => {
-    clearFields();
-    dispatch(closeModal());
-  };
-
-  const clearFields = () => {
-    setOrganizationKey("House");
-    setTypeKey("House");
-    setImageSource("");
-    setImageDisplayName("");
-    setImageFile(null);
-    setImageError("");
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
-    let finalImage = imageSource;
-
-    if (!finalImage && imageFile) {
-      finalImage = await fileToBase64(imageFile);
-    }
-
-    if (!finalImage) {
-      setImageError("Укажите, вставьте или загрузите изображение");
-      return;
-    }
-
-    const data: Popup = {
-      id: `${Date.now()}`,
-      organization: Organization[organizationKey],
-      type: PopupType[typeKey],
-      image: finalImage,
-      position: position ?? { x: 0, y: 0 },
+  // 🔹 Загрузка организаций
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const orgs = await organizationsApi.getAll();
+        setOrganizations(orgs);
+      } catch (error) {
+        console.error("Ошибка при загрузке организаций:", error);
+      }
     };
 
-    popupsApi.create(data);
-    pushPopup(data);
-    clearFields();
-    handleClose();
-  };
+    fetchOrganizations();
+  }, []);
 
-  const handleFileChange = async (fileList: FileList | null) => {
-    const file = fileList?.[0];
-    if (!file) return;
-    const base64 = await fileToBase64(file);
-    setImageSource(base64);
-    setImageFile(file);
-    setImageDisplayName(file.name); // ← теперь в поле отображается имя файла
-    setImageError("");
-  };
-
-  // 🔹 вставка изображения из буфера обмена
+  // 🔹 Вставка изображения из буфера обмена
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
       if (!event.clipboardData) return;
@@ -110,7 +64,7 @@ export const CreatePointModal = ({
             fileToBase64(file).then((base64) => {
               setImageSource(base64);
               setImageFile(file);
-              setImageDisplayName("Вставленное изображение"); // понятная метка
+              setImageDisplayName("Вставленное изображение");
               setImageError("");
             });
           }
@@ -118,15 +72,72 @@ export const CreatePointModal = ({
         }
       }
     };
+
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
   }, []);
+
+  const handleClose = () => dispatch(closeModal());
+
+  const handleCancel = () => {
+    clearFields();
+    dispatch(closeModal());
+  };
+
+  const clearFields = () => {
+    setSelectedOrganization(null);
+    setImageSource("");
+    setImageDisplayName("");
+    setImageFile(null);
+    setImageError("");
+  };
+
+  const handleFileChange = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    const base64 = await fileToBase64(file);
+    setImageSource(base64);
+    setImageFile(file);
+    setImageDisplayName(file.name);
+    setImageError("");
+  };
 
   const handleTextChange = (value: string) => {
     setImageDisplayName(value);
     setImageSource(value);
     setImageFile(null);
     setImageError("");
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!selectedOrganization) {
+      alert("Выберите организацию");
+      return;
+    }
+
+    let finalImage = imageSource;
+    if (!finalImage && imageFile) {
+      finalImage = await fileToBase64(imageFile);
+    }
+
+    if (!finalImage) {
+      setImageError("Укажите, вставьте или загрузите изображение");
+      return;
+    }
+
+    const data: Popup = {
+      id: `${Date.now()}`,
+      organization: selectedOrganization,
+      image: finalImage,
+      position: position ?? { x: 0, y: 0 },
+    };
+
+    await popupsApi.create(data);
+    pushPopup(data);
+    clearFields();
+    handleClose();
   };
 
   return (
@@ -154,48 +165,47 @@ export const CreatePointModal = ({
           {position?.y && <span>{Math.round(position.y)}</span>})
         </Typography>
 
+        {/* 🔹 Выбор организации */}
         <Autocomplete
-          options={Object.keys(Organization)}
-          getOptionLabel={(key) =>
-            Organization[key as keyof typeof Organization].name
-          }
-          renderOption={(props, key) => (
-            <li {...props} key={key}>
-              {Organization[key as keyof typeof Organization].name}
+          options={organizations}
+          getOptionLabel={(option) => option.name}
+          renderOption={(props, option) => (
+            <li {...props} key={option.name}>
+              {option.name}
             </li>
           )}
           renderInput={(params) => (
             <TextField {...params} label="Организация" required fullWidth />
           )}
-          value={organizationKey}
+          value={selectedOrganization}
           onChange={(event, newValue) => {
-            if (!newValue) return;
-            setOrganizationKey(newValue as keyof typeof Organization);
-            setTypeKey(
-              Organization[newValue as keyof typeof Organization]
-                .type as keyof typeof PopupType
-            );
+            setSelectedOrganization(newValue);
           }}
         />
 
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            p: 1,
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-          }}
-        >
-          <img
-            src={PopupType[typeKey].icon}
-            alt={PopupType[typeKey].type}
-            style={{ width: 32, height: 32 }}
-          />
-          <Typography>{PopupType[typeKey].type}</Typography>
-        </Box>
+        {/* 🔹 Отображение информации об организации */}
+        {selectedOrganization && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              p: 1,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 1,
+            }}
+          >
+            {selectedOrganization.icon && (
+              <img
+                src={selectedOrganization.icon}
+                alt={selectedOrganization.name}
+                style={{ width: 32, height: 32 }}
+              />
+            )}
+            <Typography>{selectedOrganization.type}</Typography>
+          </Box>
+        )}
 
         {/* 🔹 Поле URL / имени файла / вставленного изображения */}
         <TextField
@@ -226,6 +236,7 @@ export const CreatePointModal = ({
           }
         />
 
+        {/* 🔹 Превью изображения */}
         {imageSource && (
           <Box
             mt={1}
@@ -249,6 +260,7 @@ export const CreatePointModal = ({
           </Box>
         )}
 
+        {/* 🔹 Кнопки */}
         <Stack direction="row" justifyContent="space-between">
           <Button type="submit" variant="contained">
             Создать

@@ -478,7 +478,7 @@ export default function ZoomPanMap({
     const newMenuData: MenuData = {
       id: popup.id,
       title: popup.organization.name,
-      type: popup.type.type,
+      type: popup.organization.type,
       imgSrc: popup.image,
       // logoSrc: popup.organization.logo,
       logoSrc: "",
@@ -712,7 +712,7 @@ export default function ZoomPanMap({
               }}
             >
               <img
-                src={popup.type.icon}
+                src={popup.organization.icon}
                 alt={popup.organization.name}
                 style={{
                   width: "100%",

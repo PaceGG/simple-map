@@ -9,11 +9,10 @@ import {
   FormHelperText,
   Paper,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
-import { type Point, type Popup } from "../types";
-import { PopupType, Organization } from "../data";
+import type { Point, Popup, OrganizationInfo } from "../types";
 import {
   closeCompanyModal,
   openCompanyEditor,
@@ -22,10 +21,9 @@ import {
 } from "../store/companyModalSlice";
 import { polygonsApi } from "../api/polygonsApi";
 import { fileToBase64 } from "../utils";
-// import { companiesApi } from "../api/companiesApi"; // предполагается, что есть API для компаний
+import { organizationsApi } from "../api/organizationsApi";
 
 interface CreateCompanyModalProps {
-  // pushCompany: (company: Company) => void;
   polygonId: string;
 }
 
@@ -37,13 +35,26 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const state = useSelector((state: RootState) => state.companyModal.state);
   const companyPosition = useSelector((s: RootState) => s.companyModal.point);
-  const [companyPositionError, setCompanyPositionError] = useState("");
 
-  const [organizationKey, setOrganizationKey] =
-    useState<keyof typeof Organization>("CAP");
-  const [typeKey, setTypeKey] = useState<keyof typeof PopupType>("Clothes");
+  const [companyPositionError, setCompanyPositionError] = useState("");
+  const [organizations, setOrganizations] = useState<OrganizationInfo[]>([]);
+  const [selectedOrganization, setSelectedOrganization] =
+    useState<OrganizationInfo | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
+
+  // 🔹 Загрузка организаций
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const orgs = await organizationsApi.getAll();
+        setOrganizations(orgs);
+      } catch (error) {
+        console.error("Ошибка при загрузке организаций:", error);
+      }
+    };
+    fetchOrganizations();
+  }, []);
 
   const handleFileChange = (fileList: FileList | null) => {
     const file = fileList?.[0] || null;
@@ -51,9 +62,7 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
     if (file) setImageError("");
   };
 
-  const handleClose = () => {
-    dispatch(closeCompanyModal());
-  };
+  const handleClose = () => dispatch(closeCompanyModal());
   const handleEditor = () => dispatch(openCompanyEditor());
   const handleAdding = () => {
     setCompanyPositionError("");
@@ -61,10 +70,10 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
   };
 
   const clearFields = () => {
-    setOrganizationKey("CAP");
-    setTypeKey("Clothes");
+    setSelectedOrganization(null);
     dispatch(setCompanyPoint(null));
     setCompanyPositionError("");
+    setImage(null);
     setImageError("");
   };
 
@@ -76,32 +85,38 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!companyPosition) setCompanyPositionError("Укажите точку на карте");
-    else setCompanyPositionError("");
+    if (!companyPosition) {
+      setCompanyPositionError("Укажите точку на карте");
+      return;
+    } else setCompanyPositionError("");
 
-    if (!image) setImageError("Выберите изображение");
-    else setImageError("");
+    if (!selectedOrganization) {
+      alert("Выберите организацию");
+      return;
+    }
 
-    if (!image || !companyPosition) return;
+    if (!image) {
+      setImageError("Выберите изображение");
+      return;
+    } else setImageError("");
 
     const base64 = await fileToBase64(image);
 
     const data: Popup = {
       id: `${Date.now()}`,
       image: base64,
-      organization: Organization[organizationKey],
-      type: PopupType[typeKey],
+      organization: selectedOrganization,
       position: companyPosition,
     };
 
-    polygonsApi.addCompany(polygonId, data);
-
+    await polygonsApi.addCompany(polygonId, data);
     clearFields();
     handleClose();
   };
 
   return (
     <>
+      {/* 🔹 Мини-панель выбора точки */}
       {state === "edit" && (
         <Paper
           sx={{
@@ -142,6 +157,8 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
           </Box>
         </Paper>
       )}
+
+      {/* 🔹 Главное модальное окно */}
       <Modal open={state === "visible"} onClose={handleClose}>
         <Box
           component="form"
@@ -166,6 +183,7 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
             {companyPosition && `в точке ${renderPoint(companyPosition)}`}
           </Typography>
 
+          {/* 🔹 Кнопка выбора точки */}
           <Box>
             <Button variant="outlined" onClick={handleEditor} fullWidth>
               Указать точку
@@ -177,51 +195,49 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
             )}
           </Box>
 
+          {/* 🔹 Выбор организации */}
           <Autocomplete
-            options={Object.keys(Organization)}
-            getOptionLabel={(key) =>
-              Organization[key as keyof typeof Organization].name
-            }
-            renderOption={(props, key) => (
-              <li {...props} key={key}>
-                {Organization[key as keyof typeof Organization].name}
+            options={organizations}
+            getOptionLabel={(option) => option.name}
+            renderOption={(props, option) => (
+              <li {...props} key={option.name}>
+                {option.name}
               </li>
             )}
             renderInput={(params) => (
               <TextField {...params} label="Организация" required fullWidth />
             )}
-            value={organizationKey}
+            value={selectedOrganization}
             onChange={(event, newValue) => {
-              if (!newValue) return;
-              setOrganizationKey(newValue as keyof typeof Organization);
-              // Автоустановка типа при выборе организации
-              setTypeKey(
-                Organization[newValue as keyof typeof Organization]
-                  .type as keyof typeof PopupType
-              );
+              setSelectedOrganization(newValue);
             }}
           />
 
-          {/* Автоматический тип компании с иконкой */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              p: 1,
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 1,
-            }}
-          >
-            <img
-              src={PopupType[typeKey].icon}
-              alt={PopupType[typeKey].type}
-              style={{ width: 32, height: 32 }}
-            />
-            <Typography>{PopupType[typeKey].type}</Typography>
-          </Box>
+          {/* 🔹 Отображение информации об организации */}
+          {selectedOrganization && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                p: 1,
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1,
+              }}
+            >
+              {selectedOrganization.icon && (
+                <img
+                  src={selectedOrganization.icon}
+                  alt={selectedOrganization.name}
+                  style={{ width: 32, height: 32 }}
+                />
+              )}
+              <Typography>{selectedOrganization.type}</Typography>
+            </Box>
+          )}
 
+          {/* 🔹 Загрузка изображения */}
           <Box>
             <Button variant="outlined" component="label" fullWidth>
               {image ? image.name : "Загрузить изображение"}
@@ -239,6 +255,7 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
             )}
           </Box>
 
+          {/* 🔹 Кнопки */}
           <Stack direction="row" justifyContent="space-between">
             <Button type="submit" variant="contained">
               Создать
