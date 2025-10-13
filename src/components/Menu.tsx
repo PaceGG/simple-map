@@ -92,8 +92,8 @@ export default function SideMenu({
                     </Button>
                   </Box>
                   <Stack>
-                    {data.companies?.map((company) => (
-                      <Box>{company.organization.name}</Box>
+                    {data.companies?.map((company, i) => (
+                      <Box key={`org-${i}`}>{company.organization.name}</Box>
                     ))}
                   </Stack>
                   <CreateCompanyModal polygonId={data.id} />
