@@ -614,14 +614,22 @@ export default function ZoomPanMap({
                   d={""} // applyTransform обновит
                   fill={
                     selectedPolygonForMoving === polygon.id
-                      ? "green"
+                      ? "rgba(0, 200, 83, 0.4)" // яркий зелёный с прозрачностью
                       : selectedPolygon === polygon.id
-                      ? "blue"
+                      ? "rgba(30, 136, 229, 0.4)" // насыщенный синий
                       : polygonHovered === polygon.id
-                      ? "rgba(255, 255, 255, 0.1)"
+                      ? "rgba(255, 255, 255, 0.15)" // заметнее подсветка при наведении
                       : "transparent"
                   }
-                  stroke="transparent"
+                  stroke={
+                    selectedPolygonForMoving === polygon.id
+                      ? "rgba(0, 150, 70, 0.9)" // тёмный зелёный контур
+                      : selectedPolygon === polygon.id
+                      ? "rgba(21, 101, 192, 0.9)" // тёмный синий контур
+                      : polygonHovered === polygon.id
+                      ? "rgba(255, 255, 255, 0.5)" // белый полупрозрачный контур
+                      : "transparent"
+                  }
                   strokeWidth={2}
                   style={{
                     pointerEvents:
