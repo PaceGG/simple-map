@@ -9,7 +9,6 @@ import { CreatePointModal } from "./CreatePointModal";
 import { openModal } from "../store/modalSlice";
 import { popupsApi } from "../api/popupsApi";
 import {
-  openPolygonEditor,
   openPolygonModal,
   type PolygonModalStates,
 } from "../store/polygonModalSlice";
@@ -26,7 +25,7 @@ interface ZoomPanMapProps {
 }
 
 export default function ZoomPanMap({
-  backgroundUrl = "gtav.png",
+  backgroundUrl = "map.png",
   minScale = 0.03,
   maxScale = 400,
   initialScale = 0.03,
@@ -415,7 +414,8 @@ export default function ZoomPanMap({
       title: popup.organization.name,
       type: popup.type.type,
       imgSrc: popup.image,
-      logoSrc: popup.organization.logo,
+      // logoSrc: popup.organization.logo,
+      logoSrc: "",
       dataType: "popup",
     };
     setMenuData(newMenuData);

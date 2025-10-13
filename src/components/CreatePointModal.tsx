@@ -7,8 +7,9 @@ import {
   FormHelperText,
   Stack,
   Autocomplete,
+  InputAdornment,
 } from "@mui/material";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
 import { closeModal } from "../store/modalSlice";
@@ -16,14 +17,13 @@ import { type Popup } from "../types";
 import { PopupType, Organization } from "../data";
 import { popupsApi } from "../api/popupsApi";
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-};
 
 interface CreatePointModalProps {
   position: { x: number; y: number } | null;
@@ -40,11 +40,15 @@ export const CreatePointModal = ({
   const [organizationKey, setOrganizationKey] =
     useState<keyof typeof Organization>("CAP");
   const [typeKey, setTypeKey] = useState<keyof typeof PopupType>("Clothes");
-  const [image, setImage] = useState<File | null>(null);
+
+  // 🔹 для хранения фактического источника (URL или base64)
+  const [imageSource, setImageSource] = useState<string>("");
+  // 🔹 то, что отображается в поле ввода (URL, имя файла или пусто)
+  const [imageDisplayName, setImageDisplayName] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
 
   const handleClose = () => dispatch(closeModal());
-
   const handleCancel = () => {
     clearFields();
     dispatch(closeModal());
@@ -53,46 +57,84 @@ export const CreatePointModal = ({
   const clearFields = () => {
     setOrganizationKey("House");
     setTypeKey("House");
-    setImage(null);
+    setImageSource("");
+    setImageDisplayName("");
+    setImageFile(null);
     setImageError("");
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
-
-    // Проверяем нативную валидацию остальных полей
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
     }
 
-    // Проверяем наличие изображения вручную
-    if (!image) {
-      setImageError("Выберите изображение");
-      return;
+    let finalImage = imageSource;
+
+    if (!finalImage && imageFile) {
+      finalImage = await fileToBase64(imageFile);
     }
 
-    const base64 = await fileToBase64(image);
+    if (!finalImage) {
+      setImageError("Укажите, вставьте или загрузите изображение");
+      return;
+    }
 
     const data: Popup = {
       id: `${Date.now()}`,
       organization: Organization[organizationKey],
       type: PopupType[typeKey],
-      image: base64,
+      image: finalImage,
       position: position ?? { x: 0, y: 0 },
     };
-    popupsApi.create(data);
 
+    popupsApi.create(data);
     pushPopup(data);
     clearFields();
     handleClose();
   };
 
-  const handleFileChange = (fileList: FileList | null) => {
-    const file = fileList?.[0] || null;
-    setImage(file);
-    if (file) setImageError("");
+  const handleFileChange = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    const base64 = await fileToBase64(file);
+    setImageSource(base64);
+    setImageFile(file);
+    setImageDisplayName(file.name); // ← теперь в поле отображается имя файла
+    setImageError("");
+  };
+
+  // 🔹 вставка изображения из буфера обмена
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      if (!event.clipboardData) return;
+      const items = event.clipboardData.items;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            fileToBase64(file).then((base64) => {
+              setImageSource(base64);
+              setImageFile(file);
+              setImageDisplayName("Вставленное изображение"); // понятная метка
+              setImageError("");
+            });
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
+
+  const handleTextChange = (value: string) => {
+    setImageDisplayName(value);
+    setImageSource(value);
+    setImageFile(null);
+    setImageError("");
   };
 
   return (
@@ -109,7 +151,7 @@ export const CreatePointModal = ({
           p: 4,
           pt: 2.5,
           borderRadius: 2,
-          minWidth: 350,
+          minWidth: 380,
           display: "flex",
           flexDirection: "column",
           gap: 2,
@@ -163,22 +205,57 @@ export const CreatePointModal = ({
           <Typography>{PopupType[typeKey].type}</Typography>
         </Box>
 
-        <Box>
-          <Button variant="outlined" component="label" fullWidth>
-            {image ? image.name : "Загрузить изображение"}
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => handleFileChange(e.target.files)}
+        {/* 🔹 Поле URL / имени файла / вставленного изображения */}
+        <TextField
+          label="Ссылка или изображение"
+          placeholder="URL, изображение или выберите файл"
+          fullWidth
+          value={imageDisplayName}
+          onChange={(e) => handleTextChange(e.target.value.trim())}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <Button component="label" variant="outlined">
+                  Загрузить
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => handleFileChange(e.target.files)}
+                  />
+                </Button>
+              </InputAdornment>
+            ),
+          }}
+          error={!!imageError}
+          helperText={
+            imageError ||
+            "Можно вставить ссылку, изображение или загрузить файл"
+          }
+        />
+
+        {imageSource && (
+          <Box
+            mt={1}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              maxHeight: 180,
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src={imageSource}
+              alt="preview"
+              style={{
+                maxWidth: "100%",
+                maxHeight: 180,
+                borderRadius: 4,
+                objectFit: "contain",
+              }}
             />
-          </Button>
-          {imageError && (
-            <FormHelperText error sx={{ ml: 1 }}>
-              {imageError}
-            </FormHelperText>
-          )}
-        </Box>
+          </Box>
+        )}
 
         <Stack direction="row" justifyContent="space-between">
           <Button type="submit" variant="contained">
