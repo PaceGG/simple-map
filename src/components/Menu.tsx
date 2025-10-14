@@ -1,4 +1,12 @@
-import { Box, Collapse, Button, Typography, Stack } from "@mui/material";
+import {
+  Box,
+  Collapse,
+  Button,
+  Typography,
+  Stack,
+  Avatar,
+  Divider,
+} from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store";
 import { toggleMenu } from "../store/menuSlice";
@@ -93,28 +101,90 @@ export default function SideMenu({
                   />
                 )}
               </Box>
-              <Typography typography="p">{data.id}</Typography>
-              <Typography typography="h4">{data.title}</Typography>
-              <Typography typography="h7">{data.type}</Typography>
-              <Typography typography="p">
-                {data.polygonInfo?.houseNumber}
-              </Typography>
+              <Box sx={{ px: 1.5, mb: 1 }}>
+                <Typography
+                  typography="p"
+                  sx={{ fontSize: 10, color: "#777777ff" }}
+                >
+                  {data.id}
+                </Typography>
+                <Typography typography="h4">
+                  {data.polygonInfo?.houseNumber}
+                  {data.title}
+                </Typography>
+                <Typography typography="h7">{data.type}</Typography>
+                <Typography typography="p">
+                  {data.polygonInfo?.houseNumber}
+                </Typography>
+              </Box>
               {data.dataType === "polygon" && (
                 <>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Typography typography="h5">Организации:</Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      px: 1.5,
+                    }}
+                  >
                     <Button
-                      variant="contained"
+                      variant="outlined"
+                      fullWidth
                       onClick={() => dispatch(openCompanyModal())}
                     >
-                      +
+                      Добавить организацию
                     </Button>
                   </Box>
-                  <Stack>
-                    {data.companies?.map((company, i) => (
-                      <Box key={`org-${i}`}>{company.organization.name}</Box>
-                    ))}
-                  </Stack>
+                  {(data.companies?.length ?? 0) > 0 && (
+                    <>
+                      <Stack
+                        sx={{
+                          my: 2,
+                          borderTop: "1px solid #0000001f",
+                          borderBottom: "1px solid #0000001f",
+                          maxHeight: 480,
+                          overflowY: "auto",
+                          overflowX: "hidden",
+                        }}
+                        divider={<Divider />}
+                      >
+                        {data.companies?.map((company, i) => (
+                          <Box
+                            key={`org-${i}`}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                              p: 2,
+                              cursor: "pointer",
+                              ":hover": { bgcolor: "#0000001a" },
+                            }}
+                          >
+                            <Avatar
+                              variant="square"
+                              src={company.image}
+                              sx={{ width: 80, height: 80, borderRadius: 1 }}
+                            />
+                            <Box>
+                              <Typography variant="h6">
+                                {company.organization.name}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <img src={company.organization.icon} />
+                                {company.organization.type}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </>
+                  )}
                   <CreateCompanyModal polygonId={data.id} />
                 </>
               )}

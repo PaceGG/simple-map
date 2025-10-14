@@ -496,7 +496,7 @@ export default function ZoomPanMap({
   const selectPolygon = (polygon: Polygon) => {
     const newMenuData: MenuData = {
       id: polygon.id,
-      title: polygon.title,
+      title: `${polygon.houseNumber} ${polygon.title}`,
       type: "",
       imgSrc: polygon.image,
       logoSrc: "",
