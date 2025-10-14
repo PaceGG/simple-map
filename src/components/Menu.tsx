@@ -88,7 +88,7 @@ export default function SideMenu({
             variant="outlined"
             onClick={() => dispatch(openOrganizationModal())}
           >
-            Добавить организацию
+            Создать организацию
           </Button>
           <CreateOrganizationModal />
           {data && (
