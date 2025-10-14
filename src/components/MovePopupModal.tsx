@@ -33,14 +33,13 @@ export function MovePopupModal({
     setPolygonIdError("");
   }, [polygonId]);
 
-  const handleAdding = () => {
+  const handleAdding = async () => {
     if (!polygonId) {
       setPolygonIdError("Выберите полигон на карте");
       return;
     }
-    polygonsApi.movePopup(popupId, polygonId);
-    console.log("выбираем", polygonId);
-    selectPolygon(polygonId);
+    const newPoly = await polygonsApi.movePopup(popupId, polygonId);
+    selectPolygon(newPoly);
     dispatch(selectPolygonForMoving(""));
     dispatch(stopMoving());
   };
