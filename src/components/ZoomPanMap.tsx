@@ -63,6 +63,9 @@ export default function ZoomPanMap({
     setPopups((prev) => prev.filter((p) => p.id !== delId));
     setMenuData(null);
   };
+  const editPopup = (popupId: string, newPopup: Popup) => {
+    setPopups((prev) => prev.map((p) => (p.id === popupId ? newPopup : p)));
+  };
 
   // --- Данные полигонов ---
   const [polygons, setPolygons] = useState<Polygon[]>([]);
@@ -564,6 +567,7 @@ export default function ZoomPanMap({
           selectPopup={selectPopup}
           isLoading={isMenuLoading}
           pushPopup={pushPopup}
+          editPopup={editPopup}
         />
       </Box>
 

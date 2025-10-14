@@ -24,11 +24,9 @@ const menuSlice = createSlice({
       state.isOpen = !state.isOpen;
     },
     startMenuLoading: (state) => {
-      console.log("меню начало загрузку");
       state.isLoading = true;
     },
     stopMenuLoading: (state) => {
-      console.log("меню закончило загрузку");
       state.isLoading = false;
     },
   },
