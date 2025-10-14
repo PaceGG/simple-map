@@ -45,6 +45,10 @@ export const CreateCompanyModal = ({
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([]);
   const [selectedOrganization, setSelectedOrganization] =
     useState<OrganizationInfo | null>(null);
+  const newOrg = useSelector((s: RootState) => s.organizationModal.newOrg);
+  useEffect(() => {
+    if (newOrg) setOrganizations((prev) => [...prev, newOrg]);
+  }, [newOrg]);
 
   // 🔹 Состояния для изображения
   const [imageSource, setImageSource] = useState<string>("");
