@@ -161,10 +161,10 @@ export const CreateCompanyModal = ({
       position: companyPosition,
     };
 
-    await polygonsApi.addCompany(polygonId, data);
+    const polygon = await polygonsApi.addCompany(polygonId, data);
     clearFields();
     handleClose();
-    pushPopup(data);
+    pushPopup({ ...data, polygonInfo: polygon });
   };
 
   return (
