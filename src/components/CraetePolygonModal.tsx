@@ -15,6 +15,7 @@ import {
   TextField,
   Typography,
   InputAdornment,
+  Autocomplete,
 } from "@mui/material";
 import { useState, useEffect, type FormEvent } from "react";
 import type { Point, Polygon } from "../types";
@@ -45,6 +46,19 @@ export default function CreatePolygonModal({
   const [imageDisplayName, setImageDisplayName] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
+
+  const [streetOptions, setStreetOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const streets = await polygonsApi.getAllStreetNames();
+        setStreetOptions(streets);
+      } catch (err) {
+        console.warn("Не удалось загрузить названия улиц", err);
+      }
+    })();
+  }, []);
 
   const resetFields = () => {
     setAddress("");
@@ -226,12 +240,21 @@ export default function CreatePolygonModal({
               onChange={(e) => setHouseNumber(e.target.value)}
               sx={{ maxWidth: 80 }}
             />
-            <TextField
-              required
-              label="Адрес"
+            <Autocomplete
+              freeSolo
+              fullWidth
+              options={streetOptions}
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              sx={{ flex: 1 }}
+              onInputChange={(_, value) => setAddress(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required
+                  label="Адрес"
+                  placeholder="Выберите улицу или введите своё название"
+                  sx={{ flex: 1 }}
+                />
+              )}
             />
           </Stack>
 

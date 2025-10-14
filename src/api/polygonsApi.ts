@@ -49,6 +49,15 @@ export const polygonsApi = {
     });
   },
 
+  getAllStreetNames: async (): Promise<string[]> => {
+    const polygons = await polygonsApi.getAll();
+    const streetNames = polygons
+      .filter((p) => !p.houseNumber || p.houseNumber.trim() === "")
+      .map((p) => p.title)
+      .filter((title, index, self) => self.indexOf(title) === index);
+    return streetNames;
+  },
+
   create: async (polygon: Polygon): Promise<Polygon> => {
     const polygonData = toPolygonData(polygon);
     const res = await axios.post<PolygonData>(BASE_URL, polygonData);
