@@ -46,10 +46,20 @@ export default function CreatePolygonModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
 
+  const resetFields = () => {
+    setAddress("");
+    setHouseNumber("");
+    setImageSource("");
+    setImageDisplayName("");
+    setImageFile(null);
+    setImageError("");
+  };
+
   const openModal = () => dispatch(openPolygonModal());
   const handleClose = () => {
     onClose();
     dispatch(closePolygonModal());
+    resetFields();
   };
   const handleEditorMode = () => dispatch(openPolygonEditor());
   const handleEditor = () => handleEditorMode();
