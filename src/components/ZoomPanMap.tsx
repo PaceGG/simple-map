@@ -482,6 +482,7 @@ export default function ZoomPanMap({
       id: popup.id,
       title: popup.organization.name,
       type: popup.organization.type,
+      icon: popup.organization.icon,
       imgSrc: popup.image,
       // logoSrc: popup.organization.logo,
       logoSrc: "",

@@ -24,6 +24,7 @@ export type MenuData = {
   id: string;
   title: string;
   type: string;
+  icon?: string;
   imgSrc: string;
   logoSrc: string;
   dataType: "popup" | "polygon";
@@ -108,14 +109,19 @@ export default function SideMenu({
                 >
                   {data.id}
                 </Typography>
-                <Typography typography="h4">
-                  {data.polygonInfo?.houseNumber}
-                  {data.title}
+                <Typography typography="h4">{data.title}</Typography>
+                <Typography
+                  typography="h7"
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <img src={data.icon} alt="" />
+                  {data.type}
                 </Typography>
-                <Typography typography="h7">{data.type}</Typography>
-                <Typography typography="p">
-                  {data.polygonInfo?.houseNumber}
-                </Typography>
+                {data.dataType === "popup" && (
+                  <Typography color="#268decff">
+                    {data.polygonInfo?.houseNumber} {data.polygonInfo?.title}
+                  </Typography>
+                )}
               </Box>
               {data.dataType === "polygon" && (
                 <>
