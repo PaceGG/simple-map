@@ -6,6 +6,7 @@ import {
   Stack,
   Avatar,
   Divider,
+  Link,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store";
@@ -30,18 +31,23 @@ export type MenuData = {
   dataType: "popup" | "polygon";
   companies?: Popup[];
   polygonInfo?: Omit<Polygon, "companies">;
+  popupsPolygon?: Polygon;
 } | null;
 
 interface SideMenuProps {
   data: MenuData;
   delPopup: (id: string) => void;
   delPolygon: (id: string) => void;
+  selectPolygon: (polygon: Polygon) => void;
+  selectPopup: (popup: Popup) => void;
 }
 
 export default function SideMenu({
   data,
   delPopup,
   delPolygon,
+  selectPolygon,
+  selectPopup,
 }: SideMenuProps) {
   const isOpen = useSelector((state: RootState) => state.menu.isOpen);
   const dispatch = useDispatch();
@@ -117,10 +123,20 @@ export default function SideMenu({
                   <img src={data.icon} alt="" />
                   {data.type}
                 </Typography>
-                {data.dataType === "popup" && (
-                  <Typography color="#268decff">
-                    {data.polygonInfo?.houseNumber} {data.polygonInfo?.title}
-                  </Typography>
+                {data.dataType === "popup" && data.polygonInfo && (
+                  <Link
+                    color="#268decff"
+                    sx={{ cursor: "pointer" }}
+                    onClick={async () => {
+                      if (!data.polygonInfo) return;
+                      const polygon = await polygonsApi.getById(
+                        data.polygonInfo.id
+                      );
+                      selectPolygon(polygon);
+                    }}
+                  >
+                    {data.polygonInfo.houseNumber} {data.polygonInfo.title}
+                  </Link>
                 )}
               </Box>
               {data.dataType === "polygon" && (
@@ -141,7 +157,7 @@ export default function SideMenu({
                       Добавить организацию
                     </Button>
                   </Box>
-                  {(data.companies?.length ?? 0) > 0 && (
+                  {data.companies?.length && (
                     <>
                       <Stack
                         sx={{
@@ -165,6 +181,7 @@ export default function SideMenu({
                               cursor: "pointer",
                               ":hover": { bgcolor: "#0000001a" },
                             }}
+                            onClick={() => selectPopup(company)}
                           >
                             <Avatar
                               variant="square"

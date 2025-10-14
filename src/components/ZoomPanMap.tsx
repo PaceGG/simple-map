@@ -538,7 +538,13 @@ export default function ZoomPanMap({
           pointerEvents: "none",
         }}
       >
-        <Menu data={menuData} delPopup={delPopup} delPolygon={delPolygon} />
+        <Menu
+          data={menuData}
+          delPopup={delPopup}
+          delPolygon={delPolygon}
+          selectPolygon={selectPolygon}
+          selectPopup={selectPopup}
+        />
       </Box>
 
       <Paper

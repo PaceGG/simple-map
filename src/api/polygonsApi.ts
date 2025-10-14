@@ -35,6 +35,12 @@ export const polygonsApi = {
     return await Promise.all(res.data.map(fromPolygonData));
   },
 
+  /** 🔹 Получить полигон по ID */
+  getById: async (id: string): Promise<Polygon> => {
+    const res = await axios.get<PolygonData>(`${BASE_URL}/${id}`);
+    return await fromPolygonData(res.data);
+  },
+
   getAllPopups: async (): Promise<Popup[]> => {
     const polygons = await polygonsApi.getAll();
     return polygons.flatMap((p) => {
