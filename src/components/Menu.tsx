@@ -39,7 +39,7 @@ interface SideMenuProps {
   data: MenuData;
   delPopup: (id: string) => void;
   delPolygon: (id: string) => void;
-  selectPolygon: (polygon: Polygon) => void;
+  selectPolygon: (polygon: Polygon | string) => void;
   selectPopup: (popup: Popup) => void;
   isLoading: boolean;
   pushPopup: (popup: Popup) => void;
@@ -238,6 +238,7 @@ export default function SideMenu({
                   <MovePopupModal
                     isOpen={popupPolygonSelection}
                     popupId={data.id}
+                    selectPolygon={selectPolygon}
                   />
 
                   <Button

@@ -501,19 +501,27 @@ export default function ZoomPanMap({
     dispatch(stopMenuLoading());
   };
 
-  const selectPolygon = async (polygon: Polygon) => {
+  const selectPolygon = async (polygon: Polygon | string) => {
     dispatch(startMenuLoading());
+
+    let poly: Polygon;
+
+    if (typeof polygon === "string") {
+      poly = await polygonsApi.getById(polygon);
+    } else {
+      poly = polygon;
+    }
     const newMenuData: MenuData = {
-      id: polygon.id,
-      title: `${polygon.houseNumber} ${polygon.title}`,
+      id: poly.id,
+      title: `${poly.houseNumber} ${poly.title}`,
       type: "",
-      imgSrc: polygon.image,
+      imgSrc: poly.image,
       logoSrc: "",
       dataType: "polygon",
-      companies: polygon.companies,
-      polygonInfo: polygon,
+      companies: poly.companies,
+      polygonInfo: poly,
     };
-    setSelectedPolygon(polygon.id);
+    setSelectedPolygon(poly.id);
     setMenuData(newMenuData);
     dispatch(openMenu());
     dispatch(stopMenuLoading());

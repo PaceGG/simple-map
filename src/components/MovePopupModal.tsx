@@ -11,13 +11,19 @@ import { selectPolygonForMoving, stopMoving } from "../store/movePopupSlice";
 import { polygonsApi } from "../api/polygonsApi";
 import type { RootState } from "../store";
 import { useEffect, useState } from "react";
+import type { Polygon } from "../types";
 
 interface MovePopupModalProps {
   isOpen: boolean;
   popupId: string;
+  selectPolygon: (polygon: Polygon | string) => void;
 }
 
-export function MovePopupModal({ isOpen, popupId }: MovePopupModalProps) {
+export function MovePopupModal({
+  isOpen,
+  popupId,
+  selectPolygon,
+}: MovePopupModalProps) {
   const dispatch = useDispatch();
   const polygonId = useSelector((s: RootState) => s.movePopup.polygonId);
   const [polygonIdError, setPolygonIdError] = useState("");
@@ -33,6 +39,8 @@ export function MovePopupModal({ isOpen, popupId }: MovePopupModalProps) {
       return;
     }
     polygonsApi.movePopup(popupId, polygonId);
+    console.log("выбираем", polygonId);
+    selectPolygon(polygonId);
     dispatch(selectPolygonForMoving(""));
     dispatch(stopMoving());
   };
