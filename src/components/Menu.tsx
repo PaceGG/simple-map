@@ -42,6 +42,7 @@ interface SideMenuProps {
   selectPolygon: (polygon: Polygon) => void;
   selectPopup: (popup: Popup) => void;
   isLoading: boolean;
+  pushPopup: (popup: Popup) => void;
 }
 
 export default function SideMenu({
@@ -51,6 +52,7 @@ export default function SideMenu({
   selectPolygon,
   selectPopup,
   isLoading,
+  pushPopup,
 }: SideMenuProps) {
   const isOpen = useSelector((state: RootState) => state.menu.isOpen);
   const dispatch = useDispatch();
@@ -219,7 +221,10 @@ export default function SideMenu({
                       </Stack>
                     </>
                   )}
-                  <CreateCompanyModal polygonId={data.id} />
+                  <CreateCompanyModal
+                    polygonId={data.id}
+                    pushPopup={pushPopup}
+                  />
                 </>
               )}
               {data.dataType === "popup" && (

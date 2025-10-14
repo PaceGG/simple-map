@@ -24,7 +24,6 @@ import {
   type CompanyModalStates,
 } from "../store/companyModalSlice";
 import { selectPolygonForMoving } from "../store/movePopupSlice";
-import { SkeletonMenu } from "./SkeletonMenu";
 
 interface ZoomPanMapProps {
   backgroundUrl?: string;
@@ -556,6 +555,7 @@ export default function ZoomPanMap({
           selectPolygon={selectPolygon}
           selectPopup={selectPopup}
           isLoading={isMenuLoading}
+          pushPopup={pushPopup}
         />
       </Box>
 

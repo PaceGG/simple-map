@@ -26,13 +26,17 @@ import { organizationsApi } from "../api/organizationsApi";
 
 interface CreateCompanyModalProps {
   polygonId: string;
+  pushPopup: (popup: Popup) => void;
 }
 
 function renderPoint(point: Point): string {
   return `(${Math.round(point.x)}; ${Math.round(point.y)})`;
 }
 
-export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
+export const CreateCompanyModal = ({
+  polygonId,
+  pushPopup,
+}: CreateCompanyModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const state = useSelector((state: RootState) => state.companyModal.state);
   const companyPosition = useSelector((s: RootState) => s.companyModal.point);
@@ -156,6 +160,7 @@ export const CreateCompanyModal = ({ polygonId }: CreateCompanyModalProps) => {
     await polygonsApi.addCompany(polygonId, data);
     clearFields();
     handleClose();
+    pushPopup(data);
   };
 
   return (
