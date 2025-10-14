@@ -503,6 +503,7 @@ export default function ZoomPanMap({
       logoSrc: "",
       dataType: "polygon",
       companies: polygon.companies,
+      polygonInfo: polygon,
     };
     setSelectedPolygon(polygon.id);
     setMenuData(newMenuData);

@@ -181,7 +181,12 @@ export default function SideMenu({
                               cursor: "pointer",
                               ":hover": { bgcolor: "#0000001a" },
                             }}
-                            onClick={() => selectPopup(company)}
+                            onClick={() =>
+                              selectPopup({
+                                ...company,
+                                polygonInfo: data.polygonInfo,
+                              })
+                            }
                           >
                             <Avatar
                               variant="square"
