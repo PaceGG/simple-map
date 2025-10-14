@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store";
-import { toggleMenu } from "../store/menuSlice";
+import { startMenuLoading, toggleMenu } from "../store/menuSlice";
 import { popupsApi } from "../api/popupsApi";
 import { polygonsApi } from "../api/polygonsApi";
 import { CreateCompanyModal } from "./CreateCompanyModal";
@@ -20,6 +20,7 @@ import { startMoving } from "../store/movePopupSlice";
 import { MovePopupModal } from "./MovePopupModal";
 import { openOrganizationModal } from "../store/organizationModalSlice";
 import { CreateOrganizationModal } from "./CreateOrganizationModal";
+import { SkeletonMenu } from "./SkeletonMenu";
 
 export type MenuData = {
   id: string;
@@ -40,6 +41,7 @@ interface SideMenuProps {
   delPolygon: (id: string) => void;
   selectPolygon: (polygon: Polygon) => void;
   selectPopup: (popup: Popup) => void;
+  isLoading: boolean;
 }
 
 export default function SideMenu({
@@ -48,6 +50,7 @@ export default function SideMenu({
   delPolygon,
   selectPolygon,
   selectPopup,
+  isLoading,
 }: SideMenuProps) {
   const isOpen = useSelector((state: RootState) => state.menu.isOpen);
   const dispatch = useDispatch();
@@ -65,6 +68,8 @@ export default function SideMenu({
     polygonsApi.delete(id);
     delPolygon(id);
   };
+
+  if (isLoading) return <SkeletonMenu />;
 
   return (
     <Box display="flex" alignItems="start">
@@ -128,6 +133,7 @@ export default function SideMenu({
                     color="#268decff"
                     sx={{ cursor: "pointer" }}
                     onClick={async () => {
+                      dispatch(startMenuLoading());
                       if (!data.polygonInfo) return;
                       const polygon = await polygonsApi.getById(
                         data.polygonInfo.id

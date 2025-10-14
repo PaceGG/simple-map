@@ -2,7 +2,11 @@ import { useRef, useState, useEffect, type MouseEvent } from "react";
 import { Box, Paper } from "@mui/material";
 import Menu, { type MenuData } from "./Menu";
 import { useDispatch, useSelector } from "react-redux";
-import { openMenu } from "../store/menuSlice";
+import {
+  openMenu,
+  startMenuLoading,
+  stopMenuLoading,
+} from "../store/menuSlice";
 import type { Point, Polygon, Popup } from "../types";
 import ContextMenu, { type ContextMenuItem } from "./ContextMenu";
 import { CreatePointModal } from "./CreatePointModal";
@@ -20,6 +24,7 @@ import {
   type CompanyModalStates,
 } from "../store/companyModalSlice";
 import { selectPolygonForMoving } from "../store/movePopupSlice";
+import { SkeletonMenu } from "./SkeletonMenu";
 
 interface ZoomPanMapProps {
   backgroundUrl?: string;
@@ -477,7 +482,9 @@ export default function ZoomPanMap({
 
   // --- выбор меню ---
   const [menuData, setMenuData] = useState<MenuData | null>(null);
+  const isMenuLoading = useSelector((s: RootState) => s.menu.isLoading);
   const selectPopup = (popup: Popup) => {
+    dispatch(startMenuLoading());
     const newMenuData: MenuData = {
       id: popup.id,
       title: popup.organization.name,
@@ -492,9 +499,11 @@ export default function ZoomPanMap({
     setSelectedPolygon("");
     setMenuData(newMenuData);
     dispatch(openMenu());
+    dispatch(stopMenuLoading());
   };
 
-  const selectPolygon = (polygon: Polygon) => {
+  const selectPolygon = async (polygon: Polygon) => {
+    dispatch(startMenuLoading());
     const newMenuData: MenuData = {
       id: polygon.id,
       title: `${polygon.houseNumber} ${polygon.title}`,
@@ -508,6 +517,7 @@ export default function ZoomPanMap({
     setSelectedPolygon(polygon.id);
     setMenuData(newMenuData);
     dispatch(openMenu());
+    dispatch(stopMenuLoading());
   };
 
   // helper: при монтировании — выставим позиции
@@ -545,6 +555,7 @@ export default function ZoomPanMap({
           delPolygon={delPolygon}
           selectPolygon={selectPolygon}
           selectPopup={selectPopup}
+          isLoading={isMenuLoading}
         />
       </Box>
 
