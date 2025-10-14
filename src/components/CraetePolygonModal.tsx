@@ -38,6 +38,13 @@ export default function CreatePolygonModal({
   );
   const dispatch = useDispatch<AppDispatch>();
 
+  const selectedAddress: string = useSelector(
+    (s: RootState) => s.polygonModal.address
+  );
+  useEffect(() => {
+    setAddress(selectedAddress);
+  }, [selectedAddress]);
+
   const [address, setAddress] = useState("");
   const [houseNumber, setHouseNumber] = useState("");
 
@@ -58,6 +65,8 @@ export default function CreatePolygonModal({
         console.warn("Не удалось загрузить названия улиц", err);
       }
     })();
+
+    setAddress(selectedAddress);
   }, []);
 
   const resetFields = () => {

@@ -14,6 +14,7 @@ import { openModal } from "../store/modalSlice";
 import { popupsApi } from "../api/popupsApi";
 import {
   openPolygonModal,
+  setPolygonAddress,
   type PolygonModalStates,
 } from "../store/polygonModalSlice";
 import CreatePolygonModal from "./CraetePolygonModal";
@@ -549,6 +550,7 @@ export default function ZoomPanMap({
       polygonInfo: poly,
     };
     setSelectedPolygon(poly.id);
+    dispatch(setPolygonAddress(poly.title));
     setMenuData(newMenuData);
     dispatch(openMenu());
     dispatch(stopMenuLoading());
