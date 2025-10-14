@@ -87,6 +87,12 @@ export default function ZoomPanMap({
     setPolygons((prev) => prev.filter((p) => p.id !== delId));
     setMenuData(null);
   };
+  const editPolygon = (polygonId: string, newPolygon: Polygon) => {
+    setPolygons((prev) =>
+      prev.map((p) => (p.id === polygonId ? newPolygon : p))
+    );
+    // selectPolygon(newPolygon);
+  };
 
   // --- refs для карты ---
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -568,6 +574,7 @@ export default function ZoomPanMap({
           isLoading={isMenuLoading}
           pushPopup={pushPopup}
           editPopup={editPopup}
+          editPolygon={editPolygon}
         />
       </Box>
 

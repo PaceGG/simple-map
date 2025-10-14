@@ -18,6 +18,7 @@ interface MovePopupModalProps {
   popupId: string;
   selectPolygon: (polygon: Polygon | string) => void;
   editPopup: (popupId: string, newPopup: Popup) => void;
+  editPolygon: (polygonId: string, newPolygon: Polygon) => void;
 }
 
 export function MovePopupModal({
@@ -25,6 +26,7 @@ export function MovePopupModal({
   popupId,
   selectPolygon,
   editPopup,
+  editPolygon,
 }: MovePopupModalProps) {
   const dispatch = useDispatch();
   const polygonId = useSelector((s: RootState) => s.movePopup.polygonId);
@@ -40,10 +42,25 @@ export function MovePopupModal({
       setPolygonIdError("Выберите полигон на карте");
       return;
     }
-    const newPoly = await polygonsApi.movePopup(popupId, polygonId);
-    const newPopup = newPoly.companies.find((c) => c.id === popupId);
-    if (newPopup) editPopup(popupId, { ...newPopup, polygonInfo: newPoly });
-    selectPolygon(newPoly);
+    const { oldPolygon, newPolygon } = await polygonsApi.movePopup(
+      popupId,
+      polygonId
+    );
+
+    const newPopup = newPolygon.companies.find((c) => c.id === popupId);
+
+    if (newPopup) {
+      editPopup(popupId, { ...newPopup, polygonInfo: newPolygon });
+    }
+
+    if (oldPolygon) {
+      editPolygon(oldPolygon.id, oldPolygon);
+    }
+
+    editPolygon(newPolygon.id, newPolygon);
+
+    selectPolygon(newPolygon);
+
     dispatch(selectPolygonForMoving(""));
     dispatch(stopMoving());
   };

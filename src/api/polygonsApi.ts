@@ -78,29 +78,43 @@ export const polygonsApi = {
     return await fromPolygonData(updateRes.data);
   },
 
-  movePopup: async (popupId: string, polygonId: string): Promise<Polygon> => {
+  movePopup: async (
+    popupId: string,
+    polygonId: string
+  ): Promise<{ oldPolygon: Polygon | null; newPolygon: Polygon }> => {
     const allPopups = await popupsApi.getAll();
     const popup = allPopups.find((p) => p.id === popupId);
     if (!popup) throw new Error("Попап не найден");
     if (!popup.organization?.id)
       throw new Error("Попап не привязан к организации");
 
+    let oldPolygon: Polygon | null = null;
+
+    // Если попап был привязан к старому полигону — удаляем из него
     if (popup.polygonInfo) {
       const polygon = await polygonsApi.getById(popup.polygonInfo.id);
+
       const filteredCompanies = polygon.companies.filter(
         (c) => c.id !== popupId
       );
+
       const updatedPolygonData = {
         ...polygon,
         companies: filteredCompanies.map(toPopupData),
       };
+
       await axios.put(`${BASE_URL}/${polygon.id}`, updatedPolygonData);
+
+      // Сохраняем старую версию полигона (уже без попапа)
+      oldPolygon = { ...polygon, companies: filteredCompanies };
     } else {
-      // Иначе удаляем из глобальных попапов
+      // Если попап был "свободным", удаляем из глобального списка
       await popupsApi.delete(popupId);
     }
 
-    // Добавляем в новый полигон
-    return await polygonsApi.addCompany(polygonId, popup);
+    // Добавляем попап в новый полигон
+    const newPolygon = await polygonsApi.addCompany(polygonId, popup);
+
+    return { oldPolygon, newPolygon };
   },
 };

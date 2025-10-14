@@ -44,6 +44,7 @@ interface SideMenuProps {
   isLoading: boolean;
   pushPopup: (popup: Popup) => void;
   editPopup: (popupId: string, newPopup: Popup) => void;
+  editPolygon: (polygonId: string, newPolygon: Polygon) => void;
 }
 
 export default function SideMenu({
@@ -55,6 +56,7 @@ export default function SideMenu({
   isLoading,
   pushPopup,
   editPopup,
+  editPolygon,
 }: SideMenuProps) {
   const isOpen = useSelector((state: RootState) => state.menu.isOpen);
   const dispatch = useDispatch();
@@ -242,6 +244,7 @@ export default function SideMenu({
                     popupId={data.id}
                     selectPolygon={selectPolygon}
                     editPopup={editPopup}
+                    editPolygon={editPolygon}
                   />
 
                   <Button
