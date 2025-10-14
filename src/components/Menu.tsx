@@ -157,7 +157,7 @@ export default function SideMenu({
                       Добавить организацию
                     </Button>
                   </Box>
-                  {data.companies?.length && (
+                  {(data.companies?.length ?? 0) > 0 && (
                     <>
                       <Stack
                         sx={{
