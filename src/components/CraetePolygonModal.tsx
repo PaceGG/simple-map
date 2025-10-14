@@ -221,7 +221,6 @@ export default function CreatePolygonModal({
 
           <Stack flexDirection={"row"} gap={1}>
             <TextField
-              required
               label="№"
               value={houseNumber}
               onChange={(e) => setHouseNumber(e.target.value)}
