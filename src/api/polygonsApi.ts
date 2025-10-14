@@ -85,7 +85,22 @@ export const polygonsApi = {
     if (!popup.organization?.id)
       throw new Error("Попап не привязан к организации");
 
-    await popupsApi.delete(popupId);
+    if (popup.polygonInfo) {
+      const polygon = await polygonsApi.getById(popup.polygonInfo.id);
+      const filteredCompanies = polygon.companies.filter(
+        (c) => c.id !== popupId
+      );
+      const updatedPolygonData = {
+        ...polygon,
+        companies: filteredCompanies.map(toPopupData),
+      };
+      await axios.put(`${BASE_URL}/${polygon.id}`, updatedPolygonData);
+    } else {
+      // Иначе удаляем из глобальных попапов
+      await popupsApi.delete(popupId);
+    }
+
+    // Добавляем в новый полигон
     return await polygonsApi.addCompany(polygonId, popup);
   },
 };
