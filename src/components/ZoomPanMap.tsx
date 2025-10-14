@@ -34,13 +34,28 @@ interface ZoomPanMapProps {
 }
 
 export default function ZoomPanMap({
-  backgroundUrl = "map.png",
+  backgroundUrl = "gtav.png",
   minScale = 0.03,
   maxScale = 400,
-  initialScale = 1,
+  initialScale = 0.03,
   sx = {},
 }: ZoomPanMapProps) {
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const savedScale = localStorage.getItem("mapScale");
+    const savedTranslate = localStorage.getItem("mapTranslate");
+    if (savedScale) scaleRef.current = parseFloat(savedScale);
+    if (savedTranslate) {
+      try {
+        const t = JSON.parse(savedTranslate);
+        if (t.x != null && t.y != null) translateRef.current = t;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    requestAnimationFrame(applyTransform);
+  }, []);
 
   // --- данные попапов ---
   const [popups, setPopups] = useState<Popup[]>([]);
@@ -185,6 +200,7 @@ export default function ZoomPanMap({
 
     const { x, y } = translateRef.current;
     const s = scaleRef.current;
+    console.log({ x, y }, s);
     mapEl.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
 
     // --- Попапы: позиционируем как раньше (screen coords) ---
@@ -352,6 +368,7 @@ export default function ZoomPanMap({
       scaleRef.current = newScale;
       translateRef.current = { x: newTx, y: newTy };
       requestAnimationFrame(applyTransform);
+      saveMapState();
     };
 
     const onPointerDown = (e: PointerEvent) => {
@@ -370,6 +387,7 @@ export default function ZoomPanMap({
       translateRef.current.x += dx;
       translateRef.current.y += dy;
       requestAnimationFrame(applyTransform);
+      saveMapState();
     };
 
     const onPointerUp = (event: PointerEvent) => {
@@ -540,6 +558,23 @@ export default function ZoomPanMap({
   useEffect(() => {
     requestAnimationFrame(applyTransform);
   }, []);
+
+  function debounce(func: () => void, wait: number) {
+    let timeout: number; // <-- здесь просто number
+    return () => {
+      clearTimeout(timeout);
+      timeout = window.setTimeout(() => func(), wait); // <-- window.setTimeout
+    };
+  }
+
+  const saveMapState = debounce(() => {
+    console.log("Сохраняем состояние карты:", {
+      scale: scaleRef.current,
+      translate: translateRef.current,
+    });
+    localStorage.setItem("mapScale", scaleRef.current.toString());
+    localStorage.setItem("mapTranslate", JSON.stringify(translateRef.current));
+  }, 300);
 
   return (
     <>
