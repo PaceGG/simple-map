@@ -32,6 +32,11 @@ interface ZoomPanMapProps {
   maxScale?: number;
   initialScale?: number;
   sx?: object;
+  // tile options (optional)
+  tileUrlTemplate?: string; // шаблон с {x} и {y}, например '/tiles/{z}/{x}/{y}.png' или '/tiles/{x}/{y}.png'
+  tileSize?: number; // default 512
+  imageWidth?: number; // полная ширина исходного изображения (в логических пикселях) — обязательна при tileUrlTemplate
+  imageHeight?: number; // полная высота исходного изображения
 }
 
 export default function ZoomPanMap({
@@ -40,6 +45,10 @@ export default function ZoomPanMap({
   maxScale = 400,
   initialScale = 0.03,
   sx = {},
+  tileUrlTemplate = "tiles/{x}/{y}.png",
+  tileSize = 512,
+  imageWidth = 16384,
+  imageHeight = 24576,
 }: ZoomPanMapProps) {
   const dispatch = useDispatch();
 
@@ -110,6 +119,138 @@ export default function ZoomPanMap({
     // selectPolygon(newPolygon);
   };
 
+  // ---- tile manager (для загрузки видимых тайлов) ----
+  const tileUrlTemplateRef = useRef<string | undefined>(undefined);
+  const tileContainerRef = useRef<HTMLDivElement | null>(null);
+  const tilesMapRef = useRef<Map<string, HTMLImageElement>>(new Map()); // ключ: `${tx}_${ty}`
+  const tileSizeRef = useRef<number>(512);
+  const imageWidthRef = useRef<number | undefined>(undefined);
+  const imageHeightRef = useRef<number | undefined>(undefined);
+
+  // инициализация tile refs из пропсов (вставить рядом с другими ref-инициализациями)
+  useEffect(() => {
+    tileUrlTemplateRef.current = tileUrlTemplate;
+    tileSizeRef.current = tileSize ?? 512;
+    imageWidthRef.current = imageWidth;
+    imageHeightRef.current = imageHeight;
+  }, [tileUrlTemplate, tileSize, imageWidth, imageHeight]);
+
+  useEffect(() => {
+    if (!tileUrlTemplate) return;
+    const onResize = () => requestAnimationFrame(updateTiles);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [tileUrlTemplate]);
+
+  // helper: сформировать ключ
+  const tileKey = (tx: number, ty: number) => `${tx}_${ty}`;
+
+  // Вычисляет диапазон видимых тайлов (в логических координатах)
+  function getVisibleTileRange() {
+    const container = containerRef.current;
+    if (!container) return null;
+    const rect = container.getBoundingClientRect();
+    const viewW = rect.width;
+    const viewH = rect.height;
+    const s = scaleRef.current;
+    const tx = translateRef.current.x;
+    const ty = translateRef.current.y;
+
+    // view в логических координатах
+    const viewLeft = -tx / s;
+    const viewTop = -ty / s;
+    const viewRight = viewLeft + viewW / s;
+    const viewBottom = viewTop + viewH / s;
+
+    const tsize = tileSizeRef.current;
+    const x0 = Math.floor(viewLeft / tsize);
+    const x1 = Math.floor(viewRight / tsize);
+    const y0 = Math.floor(viewTop / tsize);
+    const y1 = Math.floor(viewBottom / tsize);
+
+    return { x0, x1, y0, y1 };
+  }
+
+  // ensured tile exists in DOM (создаёт <img> если нужно)
+  function ensureTile(tx: number, ty: number) {
+    const key = tileKey(tx, ty);
+    if (tilesMapRef.current.has(key)) return;
+
+    const tsize = tileSizeRef.current;
+    const img = new Image();
+    img.dataset.tx = String(tx);
+    img.dataset.ty = String(ty);
+    img.style.position = "absolute";
+    img.style.left = `${tx * tsize}px`;
+    img.style.top = `${ty * tsize}px`;
+    img.style.width = `${tsize}px`;
+    img.style.height = `${tsize}px`;
+    img.style.userSelect = "none";
+    img.style.pointerEvents = "none";
+    img.decoding = "async";
+
+    // формируем src по шаблону
+    const tpl = tileUrlTemplateRef.current || "";
+    const src = tpl.replace("{x}", String(tx)).replace("{y}", String(ty));
+    img.src = src;
+
+    img.onload = () => {
+      // опционально: можно плавно показать
+      img.style.opacity = "1";
+    };
+    img.onerror = () => {
+      // на ошибку можно поставить плейсхолдер или скрыть
+      img.style.opacity = "0.2";
+    };
+
+    tilesMapRef.current.set(key, img);
+    const container = tileContainerRef.current;
+    if (container) container.appendChild(img);
+  }
+
+  // Удаляет тайл (из DOM и из map)
+  function removeTile(tx: number, ty: number) {
+    const key = tileKey(tx, ty);
+    const t = tilesMapRef.current.get(key);
+    if (t) {
+      t.remove();
+      tilesMapRef.current.delete(key);
+    }
+  }
+
+  // Обновляет набор видимых тайлов (вызывать при applyTransform и при изменении размеров контейнера)
+  function updateTiles() {
+    const tpl = tileUrlTemplateRef.current;
+    if (!tpl) return;
+    const range = getVisibleTileRange();
+    if (!range) return;
+
+    // clamp по размеру изображения (если заданы imageWidth/height)
+    const imgW = imageWidthRef.current ?? Infinity;
+    const imgH = imageHeightRef.current ?? Infinity;
+    const maxTx = Math.max(0, Math.ceil(imgW / tileSizeRef.current) - 1);
+    const maxTy = Math.max(0, Math.ceil(imgH / tileSizeRef.current) - 1);
+
+    const want = new Set<string>();
+    for (let tx = range.x0 - 1; tx <= range.x1 + 1; tx++) {
+      // +1 — небольшой запас
+      if (tx < 0 || tx > maxTx) continue;
+      for (let ty = range.y0 - 1; ty <= range.y1 + 1; ty++) {
+        if (ty < 0 || ty > maxTy) continue;
+        want.add(tileKey(tx, ty));
+        ensureTile(tx, ty);
+      }
+    }
+
+    // удалить все тайлы, которых нет в want
+    for (const key of Array.from(tilesMapRef.current.keys())) {
+      if (!want.has(key)) {
+        const [sx, sy] = key.split("_").map(Number);
+        removeTile(sx, sy);
+      }
+    }
+  }
+
   // --- refs для карты ---
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapLayerRef = useRef<HTMLDivElement | null>(null);
@@ -119,6 +260,7 @@ export default function ZoomPanMap({
   const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    if (tileUrlTemplateRef) return;
     const canvas = bgCanvasRef.current;
     if (!canvas) return;
 
@@ -325,6 +467,10 @@ export default function ZoomPanMap({
         ) as SVGPathElement | null;
         if (tempEl) tempEl.setAttribute("d", "");
       }
+    }
+
+    if (tileUrlTemplateRef.current) {
+      updateTiles();
     }
   };
 
@@ -645,18 +791,34 @@ export default function ZoomPanMap({
           }}
         >
           {/* Фон карты */}
-          <canvas
-            ref={bgCanvasRef}
-            aria-hidden
-            style={{
-              position: "relative",
-              width: 1600,
-              height: 1200,
-              display: "block",
-              pointerEvents: "none", // фон не мешает кликам
-              userSelect: "none",
-            }}
-          />
+          {tileUrlTemplate ? (
+            <div
+              id="tile-container"
+              ref={tileContainerRef}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: imageWidth ? `${imageWidth}px` : "100%",
+                height: imageHeight ? `${imageHeight}px` : "100%",
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            />
+          ) : (
+            <canvas
+              ref={bgCanvasRef}
+              aria-hidden
+              style={{
+                position: "relative",
+                width: 1600,
+                height: 1200,
+                display: "block",
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            />
+          )}
         </Box>
 
         {/* Слой попапов и временных точек — НЕ масштабируется */}
