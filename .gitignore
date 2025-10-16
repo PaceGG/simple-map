@@ -25,6 +25,7 @@ dist-ssr
 
 db.json
 db_AC.json
+dbBackups/
 
 data_AC.ts
 

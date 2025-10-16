@@ -13,7 +13,7 @@ import {
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
-import type { Point, Popup, OrganizationInfo } from "../types";
+import type { Point, Popup, OrganizationInfo, Polygon } from "../types";
 import {
   closeCompanyModal,
   openCompanyEditor,
@@ -27,6 +27,7 @@ import { organizationsApi } from "../api/organizationsApi";
 interface CreateCompanyModalProps {
   polygonId: string;
   pushPopup: (popup: Popup) => void;
+  editPolygon: (polygonId: string, newPolygon: Polygon) => void;
 }
 
 function renderPoint(point: Point): string {
@@ -36,6 +37,7 @@ function renderPoint(point: Point): string {
 export const CreateCompanyModal = ({
   polygonId,
   pushPopup,
+  editPolygon,
 }: CreateCompanyModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const state = useSelector((state: RootState) => state.companyModal.state);
@@ -162,6 +164,7 @@ export const CreateCompanyModal = ({
     };
 
     const polygon = await polygonsApi.addCompany(polygonId, data);
+    editPolygon(polygonId, polygon);
     clearFields();
     handleClose();
     pushPopup({ ...data, polygonInfo: polygon });
@@ -250,7 +253,7 @@ export const CreateCompanyModal = ({
 
           {/* 🔹 Выбор организации */}
           <Autocomplete
-            options={organizations}
+            options={[...organizations].reverse()}
             getOptionLabel={(option) => option.name}
             renderOption={(props, option) => (
               <li

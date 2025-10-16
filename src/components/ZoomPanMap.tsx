@@ -698,7 +698,7 @@ export default function ZoomPanMap({
                       ? "rgba(30, 136, 229, 0.4)" // насыщенный синий
                       : polygonHovered === polygon.id
                       ? "rgba(255, 255, 255, 0.15)" // заметнее подсветка при наведении
-                      : "transparent"
+                      : "red"
                   }
                   stroke={
                     selectedPolygonForMoving === polygon.id
@@ -707,7 +707,7 @@ export default function ZoomPanMap({
                       ? "rgba(21, 101, 192, 0.9)" // тёмный синий контур
                       : polygonHovered === polygon.id
                       ? "rgba(255, 255, 255, 0.5)" // белый полупрозрачный контур
-                      : "transparent"
+                      : "red"
                   }
                   strokeWidth={2}
                   style={{

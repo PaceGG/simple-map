@@ -228,6 +228,7 @@ export default function SideMenu({
                   <CreateCompanyModal
                     polygonId={data.id}
                     pushPopup={pushPopup}
+                    editPolygon={editPolygon}
                   />
                 </>
               )}

@@ -167,7 +167,7 @@ export const CreateOrganizationModal = () => {
         {/* Тип с выбором и вводом */}
         <Autocomplete
           freeSolo
-          options={typesList}
+          options={[...typesList].reverse()}
           getOptionLabel={(option) =>
             typeof option === "string" ? option : option.label
           }
@@ -198,7 +198,11 @@ export const CreateOrganizationModal = () => {
                 sx={{ display: "flex", alignItems: "center", gap: 1 }}
               >
                 {"icon" in option && (
-                  <Avatar src={option.icon} sx={{ width: 24, height: 24 }} />
+                  <Avatar
+                    src={option.icon}
+                    sx={{ width: 24, height: 24 }}
+                    variant="square"
+                  />
                 )}
                 {typeof option === "string" ? option : option.label}
               </Box>
